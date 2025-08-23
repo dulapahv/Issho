@@ -160,19 +160,31 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
 
     // Single event deletion
-    if (body.eventId) {
-      await prisma.event.delete({
-        where: {
-          id: body.eventId,
-          calendarId: normalizedId,
-        },
-      });
+    await prisma.event.delete({
+      where: {
+        id: body.eventId,
+        calendarId: normalizedId,
+      },
+    });
 
-      return NextResponse.json(
-        { success: true, deleted: 1 },
-        { status: HTTP_STATUS.OK },
-      );
-    }
+    return NextResponse.json(
+      { success: true, deleted: 1 },
+      { status: HTTP_STATUS.OK },
+    );
+
+    // if (body.eventId) {
+    //   await prisma.event.delete({
+    //     where: {
+    //       id: body.eventId,
+    //       calendarId: normalizedId,
+    //     },
+    //   });
+
+    //   return NextResponse.json(
+    //     { success: true, deleted: 1 },
+    //     { status: HTTP_STATUS.OK },
+    //   );
+    // }
 
     // // Smart delete
     // const { deleteStart, deleteEnd, smartDelete = false } = body;
