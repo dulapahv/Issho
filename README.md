@@ -14,6 +14,8 @@
 
 <br />
 
+Issho (一緒) means "together" in Japanese - and that's exactly what this app is about. It's a real-time collaborative calendar that lets you and your friends visually mark your availability and instantly find the perfect time to meet, without the endless back-and-forth messages, polls, or creating yet another account.
+
 ✨ **Try now at [issho.dulapahv.dev](https://issho.dulapahv.dev)**
 
 ## Features
