@@ -307,6 +307,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
 // Get events
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const verification = await checkBotId();
+
+  if (verification.isBot) {
+    return NextResponse.json(
+      { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
+      { status: HTTP_STATUS.FORBIDDEN },
+    );
+  }
+
   try {
     const { id } = await params;
     const normalizedId = id.toUpperCase();
