@@ -174,115 +174,115 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Smart delete
-    const { deleteStart, deleteEnd, smartDelete = false } = body;
+    // // Smart delete
+    // const { deleteStart, deleteEnd, smartDelete = false } = body;
 
-    if (smartDelete && deleteStart && deleteEnd) {
-      const events = await prisma.event.findMany({
-        where: {
-          calendarId: normalizedId,
-          OR: [
-            {
-              AND: [
-                { start: { lt: new Date(deleteEnd) } },
-                { end: { gt: new Date(deleteStart) } },
-              ],
-            },
-          ],
-        },
-      });
+    // if (smartDelete && deleteStart && deleteEnd) {
+    //   const events = await prisma.event.findMany({
+    //     where: {
+    //       calendarId: normalizedId,
+    //       OR: [
+    //         {
+    //           AND: [
+    //             { start: { lt: new Date(deleteEnd) } },
+    //             { end: { gt: new Date(deleteStart) } },
+    //           ],
+    //         },
+    //       ],
+    //     },
+    //   });
 
-      const operations = [];
+    //   const operations = [];
 
-      for (const event of events) {
-        const eventStart = new Date(event.start);
-        const eventEnd = new Date(event.end);
-        const delStart = new Date(deleteStart);
-        const delEnd = new Date(deleteEnd);
+    //   for (const event of events) {
+    //     const eventStart = new Date(event.start);
+    //     const eventEnd = new Date(event.end);
+    //     const delStart = new Date(deleteStart);
+    //     const delEnd = new Date(deleteEnd);
 
-        // Case 1: Event completely within delete range
-        if (eventStart >= delStart && eventEnd <= delEnd) {
-          operations.push(prisma.event.delete({ where: { id: event.id } }));
-        }
-        // Case 2: Delete range completely within event - split
-        else if (eventStart < delStart && eventEnd > delEnd) {
-          operations.push(prisma.event.delete({ where: { id: event.id } }));
-          operations.push(
-            prisma.event.create({
-              data: {
-                calendarId: normalizedId,
-                title: event.title,
-                start: eventStart,
-                end: delStart,
-                color: event.color,
-              },
-            }),
-          );
-          operations.push(
-            prisma.event.create({
-              data: {
-                calendarId: normalizedId,
-                title: event.title,
-                start: delEnd,
-                end: eventEnd,
-                color: event.color,
-              },
-            }),
-          );
-        }
-        // Case 3: Delete range overlaps start
-        else if (
-          delStart <= eventStart &&
-          delEnd > eventStart &&
-          delEnd < eventEnd
-        ) {
-          operations.push(
-            prisma.event.update({
-              where: { id: event.id },
-              data: { start: delEnd },
-            }),
-          );
-        }
-        // Case 4: Delete range overlaps end
-        else if (
-          delStart > eventStart &&
-          delStart < eventEnd &&
-          delEnd >= eventEnd
-        ) {
-          operations.push(
-            prisma.event.update({
-              where: { id: event.id },
-              data: { end: delStart },
-            }),
-          );
-        }
-      }
+    //     // Case 1: Event completely within delete range
+    //     if (eventStart >= delStart && eventEnd <= delEnd) {
+    //       operations.push(prisma.event.delete({ where: { id: event.id } }));
+    //     }
+    //     // Case 2: Delete range completely within event - split
+    //     else if (eventStart < delStart && eventEnd > delEnd) {
+    //       operations.push(prisma.event.delete({ where: { id: event.id } }));
+    //       operations.push(
+    //         prisma.event.create({
+    //           data: {
+    //             calendarId: normalizedId,
+    //             title: event.title,
+    //             start: eventStart,
+    //             end: delStart,
+    //             color: event.color,
+    //           },
+    //         }),
+    //       );
+    //       operations.push(
+    //         prisma.event.create({
+    //           data: {
+    //             calendarId: normalizedId,
+    //             title: event.title,
+    //             start: delEnd,
+    //             end: eventEnd,
+    //             color: event.color,
+    //           },
+    //         }),
+    //       );
+    //     }
+    //     // Case 3: Delete range overlaps start
+    //     else if (
+    //       delStart <= eventStart &&
+    //       delEnd > eventStart &&
+    //       delEnd < eventEnd
+    //     ) {
+    //       operations.push(
+    //         prisma.event.update({
+    //           where: { id: event.id },
+    //           data: { start: delEnd },
+    //         }),
+    //       );
+    //     }
+    //     // Case 4: Delete range overlaps end
+    //     else if (
+    //       delStart > eventStart &&
+    //       delStart < eventEnd &&
+    //       delEnd >= eventEnd
+    //     ) {
+    //       operations.push(
+    //         prisma.event.update({
+    //           where: { id: event.id },
+    //           data: { end: delStart },
+    //         }),
+    //       );
+    //     }
+    //   }
 
-      await prisma.$transaction(operations);
-      return NextResponse.json(
-        { success: true, modified: operations.length },
-        { status: HTTP_STATUS.OK },
-      );
-    } else {
-      // Simple delete by IDs
-      const { eventIds } = body;
+    //   await prisma.$transaction(operations);
+    //   return NextResponse.json(
+    //     { success: true, modified: operations.length },
+    //     { status: HTTP_STATUS.OK },
+    //   );
+    // } else {
+    //   // Simple delete by IDs
+    //   const { eventIds } = body;
 
-      if (!eventIds || !Array.isArray(eventIds)) {
-        return NextResponse.json(
-          { error: ERROR_MESSAGES.EVENT.IDS_ARRAY_REQUIRED },
-          { status: HTTP_STATUS.BAD_REQUEST },
-        );
-      }
+    //   if (!eventIds || !Array.isArray(eventIds)) {
+    //     return NextResponse.json(
+    //       { error: ERROR_MESSAGES.EVENT.IDS_ARRAY_REQUIRED },
+    //       { status: HTTP_STATUS.BAD_REQUEST },
+    //     );
+    //   }
 
-      await prisma.event.deleteMany({
-        where: {
-          id: { in: eventIds },
-          calendarId: normalizedId,
-        },
-      });
+    //   await prisma.event.deleteMany({
+    //     where: {
+    //       id: { in: eventIds },
+    //       calendarId: normalizedId,
+    //     },
+    //   });
 
-      return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });
-    }
+    //   return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });
+    // }
   } catch (error) {
     const errorMessage = parseError(error);
     console.error('Failed to delete event:', errorMessage);
