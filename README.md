@@ -1,36 +1,205 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Issho: Plan with friends, faster
+
+<div align="center">
+  <a href="https://codex.dulapahv.dev/">
+    <img src="public/cover.png" width="630" alt="codex cover image"/>
+  </a>
+</div>
+
+<br />
+
+<div align="center">
+  <a href="https://github.com/dulapahv/Issho/issues"><img src="https://img.shields.io/github/issues/dulapahv/Issho.svg?style=flat" />
+</div>
+
+<br />
+
+✨ **Try now at [issho.dulapahv.dev](https://issho.dulapahv.dev)**
+
+## Features
+
+- **No Signup Required** - Start planning immediately
+- **Visual Availability Marking** - Click and drag to mark when you're free
+- **Real-time Collaboration** - See updates from friends instantly
+- **Secure Sharing** - Share calendars with unique ID and PIN
+
+## How It Works
+
+1. **Create or Join** - Start a new calendar or join an existing one with ID & PIN
+2. **Mark Availability** - Click and drag on dates when you're available
+3. **Share with Friends** - Send the calendar ID and PIN to your group
+4. **Find Common Time** - Instantly see when everyone is free!
+
+## Tech Stack
+
+- **Framework:** [Next.js 15](https://nextjs.org/)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS 4.0](https://tailwindcss.com/)
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
+- **Database:** [PostgreSQL](https://www.postgresql.org/) via [Supabase](https://supabase.com/)
+- **ORM:** [Prisma](https://www.prisma.io/)
+- **Real-time:** [Supabase Realtime Broadcast](https://supabase.com/docs/guides/realtime/broadcast)
+- **Calendar:** [React Big Calendar](https://github.com/jquense/react-big-calendar)
+- **Bot Protection:** [Vercel BotID](https://vercel.com/docs/security/botid)
+- **Deployment:** [Vercel](https://vercel.com/)
 
 ## Getting Started
 
-First, run the development server:
+### Project Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```txt
+Issho
+├── app/                           # Next.js app router
+│   ├── api/                       # API routes
+│   │   ├── calendar/              # Calendar endpoints
+│   │   │   ├── create/            # POST: Create new calendar
+│   │   │   ├── join/              # POST: Join existing calendar
+│   │   │   └── [id]/              # Calendar-specific operations
+│   │   │       ├── events/        # GET/POST/DELETE: Manage events
+│   │   │       ├── rotate-pin/    # POST: Rotate calendar PIN
+│   │   │       └── update/        # PATCH: Update calendar details
+│   │   └── cron/                  # Scheduled jobs
+│   │       └── cleanup-calendars/ # Clean up old calendars
+│   ├── calendar/                  # Calendar pages
+│   │   └── [id]/                  # Dynamic calendar view
+├── components/                    # React components
+│   └── ui/                        # shadcn/ui components
+├── lib/                           # Utility functions and services
+│   └── supabase/                  # Supabase configuration
+├── prisma/                        # Database configuration
+├── public/                        # Static assets
+└── package.json                   # Dependencies and scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Prerequisites
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 18+
+- pnpm (recommended) or npm
+- Supabase account (free tier works)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. Clone the repository:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   git clone https://github.com/dulapahv/issho.git
+   cd issho
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install dependencies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   pnpm install
+   ```
 
-## Deploy on Vercel
+3. Copy environment variables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Set up Supabase:
+
+   - Create a new project at [app.supabase.com](app.supabase.com)
+   - Copy your project URL and anon key to `.env.local`
+   - Copy database connection strings to `.env.local`
+
+5. Set up the database:
+
+   ```bash
+   pnpm prisma generate
+   pnpm prisma db push
+   ```
+
+6. Run the development server:
+
+   ```bash
+   pnpm dev
+   ```
+
+Open <http://localhost:3000> to see the app.
+
+## Usage
+
+### Creating a Calendar
+
+1. Visit the website
+2. Click "Create Calendar"
+3. Start marking your availability
+4. Share the invite link with friends
+
+### Joining a Calendar
+
+Click an invite link or enter the ID and PIN received from a friend!
+
+### Marking Availability
+
+- **Add Availability:** Select "Mark Available" and drag across dates
+- **Remove Availability:** Select "Delete Available" and drag across dates
+- **Edit Calendar Name:** Click on the calendar name in the top bar
+
+## Contributing
+
+Contributions are welcome!
+
+### Development
+
+```bash
+# Run development server (with Turbopack)
+pnpm dev
+
+# Build for production (with Turbopack)
+pnpm build
+
+# Run production build
+pnpm start
+
+# Linting and formatting
+pnpm lint:check       # Run ESLint check
+pnpm lint:fix         # Fix ESLint issues
+pnpm format:check     # Check formatting with Prettier
+pnpm format:fix       # Fix formatting with Prettier
+
+# Database commands
+pnpm db:push          # Push schema changes to database
+pnpm db:generate      # Generate Prisma client
+pnpm db:migrate       # Run database migrations
+pnpm db:studio        # Open Prisma Studio
+```
+
+### Environment Variables
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+
+# Database (for Prisma)
+DATABASE_URL=your_database_url
+DIRECT_URL=your_direct_url
+
+# Cron
+CRON_SECRET=your_cron_secret
+```
+
+## License
+
+This project is licensed under the Apache-2.0 License - see the [LICENSE](/LICENSE) file for details.
+
+## Author
+
+**Dulapah Vibulsanti**
+
+- Website: [dulapahv.dev](https://dulapahv.dev)
+- GitHub: [@dulapahv](https://github.com/dulapahv)
+
+## Acknowledgments
+
+- [React Big Calendar](https://github.com/jquense/react-big-calendar) for the calendar component
+- [Supabase](https://supabase.com/) for the backend infrastructure
+- [Vercel](https://vercel.com/) for hosting and bot protection
+- [shadcn/ui](https://ui.shadcn.com/) for UI components
+
+## Support
+
+For support, please [open an issue](https://github.com/dulapahv/Issho/issues) or contact me at [dulapahv.dev/contact](https://dulapahv.dev/contact).
