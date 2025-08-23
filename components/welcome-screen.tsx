@@ -326,7 +326,7 @@ export function WelcomeScreen() {
         {/* Image container with overflow */}
         <div className="relative h-full w-[110%] select-none">
           <Image
-            src="/cover.png"
+            src="/welcome.png"
             alt="Calendar collaboration illustration"
             fill
             className="object-cover object-left"
