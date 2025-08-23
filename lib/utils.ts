@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Generate a deterministic color from a string (name)
+// Generate a deterministic color from a string (name) and return as oklch(...)
 export function generateColorFromName(name: string, minContrast = 4.5): string {
   // Simple deterministic hash (32-bit safe)
   let hash = 2166136261 >>> 0; // FNV-ish seed
@@ -64,13 +64,13 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
     ];
   }
 
-  // sRGB -> linear channel
+  // sRGB (0-255) -> linear 0..1 channel
   function srgbToLinearChannel(v: number) {
     const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   }
 
-  // relative luminance for RGB 0-255
+  // relative luminance for RGB 0-255 (used for contrast)
   function relativeLuminance(r: number, g: number, b: number) {
     const R = srgbToLinearChannel(r);
     const G = srgbToLinearChannel(g);
@@ -98,12 +98,48 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
     if (light === minLightness) break;
   }
 
-  // Round values when returning string
-  const hRounded = Math.round(hue);
-  const sRounded = Math.round(sat);
-  const lRounded = Math.round(light);
+  // Convert final RGB (0-255) -> OKLab -> OKLCH
+  function rgbToOklch(r8: number, g8: number, b8: number) {
+    // linearize
+    const r = srgbToLinearChannel(r8);
+    const g = srgbToLinearChannel(g8);
+    const b = srgbToLinearChannel(b8);
 
-  return `hsl(${hRounded}, ${sRounded}%, ${lRounded}%)`;
+    // linear sRGB -> LMS (via matrix)
+    // matrix from sRGB linear to LMS (as used by OKLab conversion)
+    const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
+    const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
+    const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
+
+    // Non-linear transform (cube root)
+    const l_ = Math.cbrt(l);
+    const m_ = Math.cbrt(m);
+    const s_ = Math.cbrt(s);
+
+    // LMS -> OKLab
+    const L = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_;
+    const A = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_;
+    const B = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_;
+
+    // OKLab -> OKLCH
+    const C = Math.sqrt(A * A + B * B);
+    let hDeg = (Math.atan2(B, A) * 180) / Math.PI;
+    if (hDeg < 0) hDeg += 360;
+
+    return { L, C, h: hDeg };
+  }
+
+  // Compute final RGB from HSL
+  const [rf, gf, bf] = hslToRgb(hue, sat, light);
+  const { L: L_oklab, C: C_oklch, h: h_oklch } = rgbToOklch(rf, gf, bf);
+
+  // Format for CSS: oklch(L% C Hdeg)
+  // L in percent (0..100), C is unitless number (we'll show 3 decimal places), h in degrees (rounded)
+  const Lpercent = Math.round(L_oklab * 1000) / 10; // one decimal place
+  const Crounded = Math.round(C_oklch * 1000) / 1000; // three decimal places
+  const hRounded = Math.round(h_oklch);
+
+  return `oklch(${Lpercent}% ${Crounded} ${hRounded}deg)`;
 }
 
 // Generate a 6-digit PIN
