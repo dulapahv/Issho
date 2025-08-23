@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Calendar {
+  id        String   @id // Shorter custom ID
+  name      String   @default("Untitled Calendar") @db.VarChar(128)
+  pinHash   String // Hashed PIN using bcrypt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
+
+  @@index([pinHash])
+}
+
+model Event {
+  id         String   @id @default(cuid())
+  calendarId String
+  calendar   Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  title      String   @default("Untitled Event") @db.VarChar(128)
+  start      DateTime
+  end        DateTime
+  color      String // Generated from title
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([calendarId])
+}
