@@ -75,7 +75,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout(props: LayoutProps<'/'>) {
+export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="en"
@@ -92,7 +92,7 @@ export default function RootLayout(props: LayoutProps<'/'>) {
       <body className="bg-background text-foreground min-h-screen">
         <Analytics />
         <ThemeProvider attribute="class" disableTransitionOnChange>
-          <ViewTransition>{props.children}</ViewTransition>
+          <ViewTransition>{children}</ViewTransition>
           <Toaster className="whitespace-pre-line" theme="system" />
         </ThemeProvider>
       </body>

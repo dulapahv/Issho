@@ -6,12 +6,6 @@ import { ERROR_MESSAGES, HTTP_STATUS, VALIDATION } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { generateColorFromName, parseError, verifyPIN } from '@/lib/utils';
 
-interface RouteParams {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
 // Helper function to verify calendar access
 async function verifyCalendarAccess(calendarId: string, request: NextRequest) {
   const normalizedCalendarId = calendarId.toUpperCase();
@@ -52,7 +46,10 @@ async function verifyCalendarAccess(calendarId: string, request: NextRequest) {
 }
 
 // Create event
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  { params }: RouteContext<'/api/calendar/[id]/events'>,
+) {
   const verification = await checkBotId();
 
   if (verification.isBot) {
@@ -134,7 +131,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 }
 
 // Delete single event or smart delete
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: RouteContext<'/api/calendar/[id]/events'>,
+) {
   // TODO: Somehow isBot always return true for DELETE requests
   // const verification = await checkBotId();
 
@@ -306,7 +306,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 }
 
 // Get events
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: RouteContext<'/api/calendar/[id]/events'>,
+) {
   const verification = await checkBotId();
 
   if (verification.isBot) {

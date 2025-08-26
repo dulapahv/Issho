@@ -6,13 +6,10 @@ import { ERROR_MESSAGES, HTTP_STATUS, VALIDATION } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { parseError, verifyPIN } from '@/lib/utils';
 
-interface RouteParams {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  { params }: RouteContext<'/api/calendar/[id]/update'>,
+) {
   const verification = await checkBotId();
 
   if (verification.isBot) {
