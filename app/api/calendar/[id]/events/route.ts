@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { checkBotId } from 'botid/server';
+// import { checkBotId } from 'botid/server';
 
 import { ERROR_MESSAGES, HTTP_STATUS, VALIDATION } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
@@ -50,14 +50,14 @@ export async function POST(
   request: NextRequest,
   { params }: RouteContext<'/api/calendar/[id]/events'>,
 ) {
-  const verification = await checkBotId();
+  // const verification = await checkBotId();
 
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
-      { status: HTTP_STATUS.FORBIDDEN },
-    );
-  }
+  // if (verification.isBot) {
+  //   return NextResponse.json(
+  //     { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
+  //     { status: HTTP_STATUS.FORBIDDEN },
+  //   );
+  // }
 
   try {
     const { id } = await params;
@@ -310,14 +310,14 @@ export async function GET(
   request: NextRequest,
   { params }: RouteContext<'/api/calendar/[id]/events'>,
 ) {
-  const verification = await checkBotId();
+  // const verification = await checkBotId();
 
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
-      { status: HTTP_STATUS.FORBIDDEN },
-    );
-  }
+  // if (verification.isBot) {
+  //   return NextResponse.json(
+  //     { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
+  //     { status: HTTP_STATUS.FORBIDDEN },
+  //   );
+  // }
 
   try {
     const { id } = await params;

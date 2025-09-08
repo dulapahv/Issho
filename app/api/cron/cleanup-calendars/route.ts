@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { checkBotId } from 'botid/server';
+// import { checkBotId } from 'botid/server';
 
 import {
   CLEANUP,
@@ -28,16 +28,16 @@ export async function GET(request: NextRequest) {
       const userAgent = request.headers.get('user-agent');
       if (!userAgent?.includes('vercel-cron/1.0')) {
         // If not from Vercel Cron, check BotID to prevent abuse
-        const verification = await checkBotId({
-          developmentOptions: IS_DEV_ENV ? { bypass: 'HUMAN' } : undefined,
-        });
+        // const verification = await checkBotId({
+        //   developmentOptions: IS_DEV_ENV ? { bypass: 'HUMAN' } : undefined,
+        // });
 
-        if (verification.isBot) {
-          return NextResponse.json(
-            { error: ERROR_MESSAGES.AUTH.UNAUTHORIZED },
-            { status: HTTP_STATUS.UNAUTHORIZED },
-          );
-        }
+        // if (verification.isBot) {
+        //   return NextResponse.json(
+        //     { error: ERROR_MESSAGES.AUTH.UNAUTHORIZED },
+        //     { status: HTTP_STATUS.UNAUTHORIZED },
+        //   );
+        // }
       }
 
       // Additional security: Use a secret token in production

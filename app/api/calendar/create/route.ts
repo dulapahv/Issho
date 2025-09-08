@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { checkBotId } from 'botid/server';
+// import { checkBotId } from 'botid/server';
 
 import { ERROR_MESSAGES, HTTP_STATUS, SUCCESS_MESSAGES } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
@@ -13,14 +13,14 @@ import {
 } from '@/lib/utils';
 
 export async function POST() {
-  const verification = await checkBotId();
+  // const verification = await checkBotId();
 
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
-      { status: HTTP_STATUS.FORBIDDEN },
-    );
-  }
+  // if (verification.isBot) {
+  //   return NextResponse.json(
+  //     { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
+  //     { status: HTTP_STATUS.FORBIDDEN },
+  //   );
+  // }
 
   try {
     let calendarId = generateCalendarId().toUpperCase();

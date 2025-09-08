@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { checkBotId } from 'botid/server';
+// import { checkBotId } from 'botid/server';
 
 import {
   ERROR_MESSAGES,
@@ -12,14 +12,14 @@ import { prisma } from '@/lib/prisma';
 import { parseError, verifyPIN } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
-  const verification = await checkBotId();
+  // const verification = await checkBotId();
 
-  if (verification.isBot) {
-    return NextResponse.json(
-      { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
-      { status: HTTP_STATUS.FORBIDDEN },
-    );
-  }
+  // if (verification.isBot) {
+  //   return NextResponse.json(
+  //     { error: ERROR_MESSAGES.BOT.VERIFICATION_FAILED },
+  //     { status: HTTP_STATUS.FORBIDDEN },
+  //   );
+  // }
 
   try {
     const { id, pin } = await request.json();
