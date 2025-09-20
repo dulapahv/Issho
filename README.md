@@ -102,7 +102,7 @@ Issho
 
 4. Set up Supabase:
 
-   - Sign up or log in at [app.supabase.com](app.supabase.com)
+   - Sign up or log in at [app.supabase.com](https://app.supabase.com)
    - Create a new project (free tier is fine).
    - In Project **Settings → API**, copy:
       - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
