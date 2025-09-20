@@ -1,7 +1,7 @@
 # Issho: Plan with friends, faster
 
 <div align="center">
-  <a href="https://codex.dulapahv.dev/">
+  <a href="https://issho.dulapahv.dev/">
     <img src="public/cover.png" width="630" alt="codex cover image"/>
   </a>
 </div>
@@ -102,14 +102,22 @@ Issho
 
 4. Set up Supabase:
 
-   - Create a new project at [app.supabase.com](app.supabase.com)
-   - Copy your project URL and anon key to `.env.local`
-   - Copy database connection strings to `.env.local`
+   - Sign up or log in at [app.supabase.com](app.supabase.com)
+   - Create a new project (free tier is fine).
+   - In Project **Settings → API**, copy:
+      - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+      - `anon public key` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+   - In **Database → Connection** info, copy the Postgres connection string:
+      - `DATABASE_URL`
+      - `DIRECT_URL`.
 
-5. Set up the database:
+   > You do **not** need to set the `CRON_SECRET` environment variable for local development.
+
+5. Initialize the database schema
+
+   > `pnpm prisma generate` runs automatically after dependencies are installed (via the postinstall script in package.json).
 
    ```bash
-   pnpm prisma generate
    pnpm prisma db push
    ```
 
@@ -119,7 +127,7 @@ Issho
    pnpm dev
    ```
 
-Open <http://localhost:3000> to see the app.
+   Your app will be live at <http://localhost:3000>.
 
 ## Usage
 
