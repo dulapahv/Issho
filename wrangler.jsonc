@@ -1,0 +1,57 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "issho",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-10-05",
+  "compatibility_flags": [
+    // Enable Node.js API
+    "nodejs_compat",
+    // Allow fetch URLs in your app
+    "global_fetch_strictly_public",
+  ],
+  "workers_dev": false,
+  "keep_names": false,
+  "routes": [
+    {
+      "custom_domain": true,
+      "pattern": "issho.dulapahv.dev",
+    },
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      // The service should match the "name" of your worker
+      "service": "issho",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "issho-cache",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NEXT_CACHE_DO_QUEUE",
+        "class_name": "DOQueueHandler",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DOQueueHandler"],
+    },
+  ],
+  "observability": {
+    "enabled": true,
+  },
+  "placement": {
+    "mode": "smart",
+  },
+}

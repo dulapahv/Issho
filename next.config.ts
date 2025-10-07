@@ -1,10 +1,16 @@
 import type { NextConfig } from 'next';
 
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 import { withBotId } from 'botid/next/config';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
+  images: {
+    loader: 'custom',
+    loaderFile: './image-loader.ts',
+    qualities: [100],
+  },
   experimental: {
     typedEnv: true,
     viewTransition: true,
@@ -20,5 +26,7 @@ const nextConfig: NextConfig = {
     ];
   },
 };
+
+initOpenNextCloudflareForDev();
 
 export default withBotId(nextConfig);
