@@ -1,4 +1,4 @@
-import { unstable_ViewTransition as ViewTransition } from 'react';
+import { ViewTransition } from 'react';
 import type { Metadata, Viewport } from 'next';
 
 import { GeistMono } from 'geist/font/mono';
