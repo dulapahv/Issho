@@ -582,7 +582,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
   events.forEach((event) => participantColorMap.set(event.title, event.color));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-y-auto">
       {/* Main Overview Card */}
       <Card id="tour-step-3">
         <CardHeader>
@@ -629,9 +629,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
               className="flex gap-x-2 rounded-lg bg-yellow-50 p-2.5
                 dark:bg-yellow-950/30"
             >
-              <WarningOctagonIcon
-                className="size-5 shrink-0 text-yellow-500"
-              />
+              <WarningOctagonIcon className="size-5 shrink-0 text-yellow-500" />
               <p
                 className="text-sm font-medium text-yellow-900
                   dark:text-yellow-100"
@@ -768,7 +766,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             Individual Availability
           </CardTitle>
         </CardHeader>
-        <CardContent className="max-h-66.25 space-y-4 overflow-y-auto">
+        <CardContent className="max-h-57 space-y-4 overflow-y-auto">
           {metrics.participantMetrics.map((participant) => (
             <div key={participant.name} className="space-y-2">
               <div className="flex items-center justify-between">
