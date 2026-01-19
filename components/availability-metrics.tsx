@@ -1,6 +1,4 @@
-'use client';
-
-import { useMemo } from 'react';
+"use client";
 
 import {
   CalendarDotsIcon,
@@ -16,14 +14,14 @@ import {
   UserCheckIcon,
   UsersIcon,
   WarningOctagonIcon,
-} from '@phosphor-icons/react';
-import { format } from 'date-fns/format';
-
-import { CalendarEvent } from '@/lib/calendar-store';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+} from "@phosphor-icons/react";
+import { format } from "date-fns/format";
+import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import type { CalendarEvent } from "@/lib/calendar-store";
 
 interface AvailabilityMetricsProps {
   events: CalendarEvent[];
@@ -119,7 +117,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       const end = new Date(event.end);
 
       for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-        const dateStr = format(d, 'yyyy-MM-dd');
+        const dateStr = format(d, "yyyy-MM-dd");
         if (!dailyAvailability.has(dateStr)) {
           dailyAvailability.set(dateStr, new Set());
         }
@@ -248,7 +246,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     const longestDurationDays = longest
       ? Math.ceil(
           (longest.end.getTime() - longest.start.getTime()) /
-            (1000 * 60 * 60 * 24),
+            (1000 * 60 * 60 * 24)
         )
       : 0;
 
@@ -272,7 +270,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         ? Math.ceil(
             ((overallLatestDate as Date).getTime() -
               (overallEarliestDate as Date).getTime()) /
-              (1000 * 60 * 60 * 24),
+              (1000 * 60 * 60 * 24)
           )
         : 0;
     const coveragePercentage =
@@ -304,7 +302,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         const start = new Date(event.start);
         const end = new Date(event.end);
         for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-          participantDates.add(format(d, 'yyyy-MM-dd'));
+          participantDates.add(format(d, "yyyy-MM-dd"));
         }
       });
 
@@ -349,7 +347,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         currentWindow.dates.push(date);
       } else {
         if (currentWindow !== null && currentWindow.dates.length > 0) {
-          const rangeKey = `${format(currentWindow.dates[0], 'yyyy-MM-dd')}-${format(currentWindow.dates[currentWindow.dates.length - 1], 'yyyy-MM-dd')}`;
+          const rangeKey = `${format(currentWindow.dates[0], "yyyy-MM-dd")}-${format(currentWindow.dates[currentWindow.dates.length - 1], "yyyy-MM-dd")}`;
           if (!processedRanges.has(rangeKey)) {
             processedRanges.add(rangeKey);
             const windowDates = currentWindow.dates;
@@ -359,7 +357,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 start: windowDates[0],
                 end: new Date(
                   windowDates[windowDates.length - 1].getTime() +
-                    24 * 60 * 60 * 1000,
+                    24 * 60 * 60 * 1000
                 ),
               },
               participants: Array.from(windowParticipants),
@@ -385,7 +383,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         range: {
           start: windowDates[0],
           end: new Date(
-            windowDates[windowDates.length - 1].getTime() + 24 * 60 * 60 * 1000,
+            windowDates[windowDates.length - 1].getTime() + 24 * 60 * 60 * 1000
           ),
         },
         participants: Array.from(windowParticipants),
@@ -573,11 +571,11 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
   const formatDateRange = (range: DateRange) => {
     const adjustedEnd = new Date(range.end.getTime() - 24 * 60 * 60 * 1000);
     if (
-      format(range.start, 'yyyy-MM-dd') === format(adjustedEnd, 'yyyy-MM-dd')
+      format(range.start, "yyyy-MM-dd") === format(adjustedEnd, "yyyy-MM-dd")
     ) {
-      return format(range.start, 'MMM d, yyyy');
+      return format(range.start, "MMM d, yyyy");
     }
-    return `${format(range.start, 'MMM d')} - ${format(adjustedEnd, 'MMM d, yyyy')}`;
+    return `${format(range.start, "MMM d")} - ${format(adjustedEnd, "MMM d, yyyy")}`;
   };
 
   const participantColorMap = new Map<string, string>();
@@ -596,46 +594,34 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2 text-sm">
-              <UsersIcon className="text-muted-foreground size-5" />
+              <UsersIcon className="size-5 text-muted-foreground" />
               <span>
                 <strong>{metrics.totalParticipants}</strong> participant
-                {metrics.totalParticipants !== 1 ? 's' : ''}
+                {metrics.totalParticipants !== 1 ? "s" : ""}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <PulseIcon className="text-muted-foreground size-5" />
+              <PulseIcon className="size-5 text-muted-foreground" />
               <span>
-                <strong>{metrics.averageParticipantsPerDay.toFixed(1)}</strong>{' '}
+                <strong>{metrics.averageParticipantsPerDay.toFixed(1)}</strong>{" "}
                 avg/day
               </span>
             </div>
           </div>
 
           {metrics.everyoneAvailable ? (
-            <div
-              className="flex items-center gap-x-2 rounded-lg bg-green-50 p-2.5
-                dark:bg-green-950/30"
-            >
+            <div className="flex items-center gap-x-2 rounded-lg bg-green-50 p-2.5 dark:bg-green-950/30">
               <SealCheckIcon className="size-5 text-green-500" />
-              <p
-                className="text-sm font-medium text-green-900
-                  dark:text-green-100"
-              >
+              <p className="font-medium text-green-900 text-sm dark:text-green-100">
                 {metrics.commonRanges.length} time
-                {metrics.commonRanges.length !== 1 ? 's' : ''} when everyone is
+                {metrics.commonRanges.length !== 1 ? "s" : ""} when everyone is
                 available!
               </p>
             </div>
           ) : (
-            <div
-              className="flex gap-x-2 rounded-lg bg-yellow-50 p-2.5
-                dark:bg-yellow-950/30"
-            >
+            <div className="flex gap-x-2 rounded-lg bg-yellow-50 p-2.5 dark:bg-yellow-950/30">
               <WarningOctagonIcon className="size-5 shrink-0 text-yellow-500" />
-              <p
-                className="text-sm font-medium text-yellow-900
-                  dark:text-yellow-100"
-              >
+              <p className="font-medium text-sm text-yellow-900 dark:text-yellow-100">
                 No time works for everyone
               </p>
             </div>
@@ -645,7 +631,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
 
           {/* Date Range Metrics */}
           <div className="space-y-3">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
+            <h3 className="flex items-center gap-2 font-semibold text-sm">
               <CalendarStarIcon className="size-5" />
               Best Overlap Dates
             </h3>
@@ -656,7 +642,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                     Earliest Best Date
                   </p>
                   <p className="font-medium">
-                    {format(metrics.earliestDate, 'MMM d, yyyy')}
+                    {format(metrics.earliestDate, "MMM d, yyyy")}
                   </p>
                 </div>
               )}
@@ -666,7 +652,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                     Latest Best Date
                   </p>
                   <p className="font-medium">
-                    {format(metrics.latestDate, 'MMM d, yyyy')}
+                    {format(metrics.latestDate, "MMM d, yyyy")}
                   </p>
                 </div>
               )}
@@ -675,7 +661,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                   <p className="text-muted-foreground text-xs">
                     Earliest Best Range
                   </p>
-                  <p className="text-xs font-medium">
+                  <p className="font-medium text-xs">
                     {formatDateRange(metrics.earliestRange)}
                   </p>
                 </div>
@@ -685,7 +671,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                   <p className="text-muted-foreground text-xs">
                     Latest Best Range
                   </p>
-                  <p className="text-xs font-medium">
+                  <p className="font-medium text-xs">
                     {formatDateRange(metrics.latestRange)}
                   </p>
                 </div>
@@ -697,14 +683,14 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             <>
               <Separator />
               <div className="space-y-2">
-                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <h3 className="flex items-center gap-2 font-semibold text-sm">
                   <ClockIcon className="size-5" />
                   Longest Common Availability
                 </h3>
                 <div className="space-y-1 rounded-lg border p-3">
-                  <p className="text-sm font-medium">
+                  <p className="font-medium text-sm">
                     {metrics.longestDurationDays} consecutive day
-                    {metrics.longestDurationDays !== 1 ? 's' : ''}
+                    {metrics.longestDurationDays !== 1 ? "s" : ""}
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {formatDateRange(metrics.longest)}
@@ -725,19 +711,19 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         </CardHeader>
         <CardContent className="max-h-80 space-y-3 overflow-y-auto">
           {metrics.topMeetingWindows.slice(0, 5).map((window, index) => (
-            <div key={index} className="space-y-2 rounded-lg border p-3">
+            <div className="space-y-2 rounded-lg border p-3" key={index}>
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">
+                  <p className="font-medium text-sm">
                     {window.count}/{metrics.totalParticipants} participants
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {formatDateRange(window.range)} ({window.daysCount} day
-                    {window.daysCount !== 1 ? 's' : ''})
+                    {window.daysCount !== 1 ? "s" : ""})
                   </p>
                 </div>
                 {window.count === metrics.totalParticipants && (
-                  <Badge variant="default" className="text-xs">
+                  <Badge className="text-xs" variant="default">
                     All
                   </Badge>
                 )}
@@ -745,12 +731,12 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
               <div className="flex flex-wrap gap-1">
                 {window.participants.map((p) => (
                   <Badge
-                    key={p}
-                    variant="outline"
                     className="text-xs"
+                    key={p}
                     style={{
                       backgroundColor: participantColorMap.get(p) || undefined,
                     }}
+                    variant="outline"
                   >
                     {p}
                   </Badge>
@@ -770,34 +756,34 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         </CardHeader>
         <CardContent className="max-h-57 space-y-4 overflow-y-auto">
           {metrics.participantMetrics.map((participant) => (
-            <div key={participant.name} className="space-y-2">
+            <div className="space-y-2" key={participant.name}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div
                     className="mr-1.5 h-6 w-1 rounded-full"
                     style={{
                       backgroundColor: participantColorMap.get(
-                        participant.name,
+                        participant.name
                       ),
                     }}
                   />
-                  <span className="text-sm font-medium">
+                  <span className="font-medium text-sm">
                     {participant.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge className="text-xs" variant="secondary">
                     {participant.totalDays} days
                   </Badge>
                   {participant === metrics.mostAvailable && (
-                    <Badge variant="default" className="text-xs">
+                    <Badge className="text-xs" variant="default">
                       <TrendUpIcon className="mr-1 size-3" />
                       Most
                     </Badge>
                   )}
                   {participant === metrics.leastAvailable &&
                     metrics.participantMetrics.length > 1 && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge className="text-xs" variant="outline">
                         <TrendDownIcon className="mr-1 size-3" />
                         Least
                       </Badge>
@@ -805,9 +791,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 </div>
               </div>
               <Progress
-                value={participant.percentage}
-                className="h-1.5"
                 aria-label={`Availability for ${participant.name}: ${participant.percentage.toFixed(1)}%`}
+                className="h-1.5"
+                value={participant.percentage}
               />
             </div>
           ))}
@@ -831,32 +817,26 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
               </span>
             </div>
             <Progress
-              value={metrics.coveragePercentage}
-              className="h-2"
               aria-label={`Calendar coverage: ${metrics.coveragePercentage.toFixed(1)}%`}
+              className="h-2"
+              value={metrics.coveragePercentage}
             />
             <p className="text-muted-foreground text-xs">
-              {metrics.totalDaysWithCoverage} of {metrics.totalCalendarDays}{' '}
+              {metrics.totalDaysWithCoverage} of {metrics.totalCalendarDays}{" "}
               days have at least one person available
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="space-y-1">
-              <p
-                className="text-muted-foreground flex items-center gap-1
-                  text-xs"
-              >
+              <p className="flex items-center gap-1 text-muted-foreground text-xs">
                 <CalendarDotsIcon className="size-3" />
                 Weekdays
               </p>
               <p className="font-medium">{metrics.weekdayAvailability} days</p>
             </div>
             <div className="space-y-1">
-              <p
-                className="text-muted-foreground flex items-center gap-1
-                  text-xs"
-              >
+              <p className="flex items-center gap-1 text-muted-foreground text-xs">
                 <CalendarDotsIcon className="size-3" />
                 Weekends
               </p>
@@ -867,7 +847,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           {metrics.optimalMeetingLength > 1 && (
             <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950/30">
               <p className="text-sm">
-                <span className="font-medium">Optimal meeting length:</span>{' '}
+                <span className="font-medium">Optimal meeting length:</span>{" "}
                 <span className="text-blue-700 dark:text-blue-300">
                   {metrics.optimalMeetingLength} days
                 </span>
@@ -895,7 +875,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             )}
           </p>
           {metrics.pairwiseOverlaps.map((overlap, index) => (
-            <div key={index} className="flex items-center justify-between">
+            <div className="flex items-center justify-between" key={index}>
               <div className="flex items-center">
                 <div
                   className="mr-1.5 h-6 w-1 rounded-full"
@@ -908,7 +888,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
+                <Badge className="text-xs" variant="secondary">
                   {overlap.overlapDays} days
                 </Badge>
                 <span className="text-muted-foreground text-xs">

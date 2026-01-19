@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
 // import { checkBotId } from 'botid/server';
 
-import { ERROR_MESSAGES, HTTP_STATUS, SUCCESS_MESSAGES } from '@/lib/constants';
-import { prisma } from '@/lib/prisma';
-import { generatePIN, hashPINForDB, parseError, verifyPIN } from '@/lib/utils';
+import { ERROR_MESSAGES, HTTP_STATUS, SUCCESS_MESSAGES } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { generatePIN, hashPINForDB, parseError, verifyPIN } from "@/lib/utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: RouteContext<'/api/calendar/[id]/rotate-pin'>,
+  { params }: RouteContext<"/api/calendar/[id]/rotate-pin">
 ) {
   // const verification = await checkBotId();
 
@@ -23,11 +23,11 @@ export async function POST(
     const { id } = await params;
     const normalizedId = id.toUpperCase();
 
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+    if (!(authHeader && authHeader.startsWith("Bearer "))) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.AUTH.MISSING_TOKEN },
-        { status: HTTP_STATUS.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(
     if (!calendar) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.NOT_FOUND },
-        { status: HTTP_STATUS.NOT_FOUND },
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
@@ -48,7 +48,7 @@ export async function POST(
     if (!isValid) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.AUTH.INVALID_PIN },
-        { status: HTTP_STATUS.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
@@ -66,14 +66,14 @@ export async function POST(
         message: SUCCESS_MESSAGES.PIN.ROTATED,
         pin: newPin,
       },
-      { status: HTTP_STATUS.OK },
+      { status: HTTP_STATUS.OK }
     );
   } catch (error) {
     const errorMessage = parseError(error);
-    console.error('Error rotating PIN:', errorMessage);
+    console.error("Error rotating PIN:", errorMessage);
     return NextResponse.json(
       { error: `${ERROR_MESSAGES.PIN.ROTATE_FAILED}: ${errorMessage}` },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

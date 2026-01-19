@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
+import { Suspense } from "react";
 
-import { WelcomeScreen } from '@/components/welcome-screen';
+import { WelcomeScreen } from "@/components/welcome-screen";
 
 export default function Home() {
   return (
-    <div className="animate-fade-in min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       <Suspense fallback={null}>
         <WelcomeScreen />
       </Suspense>

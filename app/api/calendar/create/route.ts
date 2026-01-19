@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 // import { checkBotId } from 'botid/server';
 
-import { ERROR_MESSAGES, HTTP_STATUS, SUCCESS_MESSAGES } from '@/lib/constants';
-import { prisma } from '@/lib/prisma';
+import { ERROR_MESSAGES, HTTP_STATUS, SUCCESS_MESSAGES } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import {
   generateCalendarId,
   generateCalendarName,
   generatePIN,
   hashPINForDB,
   parseError,
-} from '@/lib/utils';
+} from "@/lib/utils";
 
 export async function POST() {
   // const verification = await checkBotId();
@@ -46,7 +46,7 @@ export async function POST() {
     }
 
     if (attempts >= maxAttempts) {
-      throw new Error('Unable to generate unique calendar ID');
+      throw new Error("Unable to generate unique calendar ID");
     }
 
     const calendar = await prisma.calendar.create({
@@ -64,14 +64,14 @@ export async function POST() {
         pin, // Send plain PIN only on creation
         message: SUCCESS_MESSAGES.CALENDAR.CREATED,
       },
-      { status: HTTP_STATUS.CREATED },
+      { status: HTTP_STATUS.CREATED }
     );
   } catch (error) {
     const errorMessage = parseError(error);
-    console.error('Error creating calendar:', errorMessage);
+    console.error("Error creating calendar:", errorMessage);
     return NextResponse.json(
       { error: `${ERROR_MESSAGES.CALENDAR.CREATE_FAILED}: ${errorMessage}` },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

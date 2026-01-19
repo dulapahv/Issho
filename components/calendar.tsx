@@ -1,32 +1,30 @@
-'use client';
+"use client";
 
-import { useCallback, useMemo, useRef, useState } from 'react';
-
-import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { format } from 'date-fns/format';
-import { getDay } from 'date-fns/getDay';
-import { enUS } from 'date-fns/locale/en-US';
-import { parse } from 'date-fns/parse';
-import { startOfWeek } from 'date-fns/startOfWeek';
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { format } from "date-fns/format";
+import { getDay } from "date-fns/getDay";
+import { enUS } from "date-fns/locale/en-US";
+import { parse } from "date-fns/parse";
+import { startOfWeek } from "date-fns/startOfWeek";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
-  SlotInfo,
-  View,
+  type SlotInfo,
+  type View,
   Views,
-} from 'react-big-calendar';
-import { toast } from 'sonner';
+} from "react-big-calendar";
+import { toast } from "sonner";
+import { MarkAvailabilityDialog } from "@/components/mark-availability-dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { type CalendarEvent, useCalendarStore } from "@/lib/calendar-store";
+import { cn, parseError } from "@/lib/utils";
 
-import { CalendarEvent, useCalendarStore } from '@/lib/calendar-store';
-import { cn, parseError } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { MarkAvailabilityDialog } from '@/components/mark-availability-dialog';
-
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 const locales = {
-  'en-US': enUS,
+  "en-US": enUS,
 };
 
 const startOfWeekMonday = (date: Date) => {
@@ -65,22 +63,22 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
       }
       // In delete mode, do nothing on slot selection - only allow clicking specific events
     },
-    [isDrawMode],
+    [isDrawMode]
   );
 
   const handleSelectEvent = useCallback(
     async (event: CalendarEvent) => {
-      if (!isDrawMode && !isProcessingRef.current) {
+      if (!(isDrawMode || isProcessingRef.current)) {
         // Delete mode - delete specific event when clicked
         isProcessingRef.current = true;
-        const toastId = toast.loading('Removing availability...');
+        const toastId = toast.loading("Removing availability...");
 
         try {
           await onDeleteEvent(event.id);
-          toast.success('Availability removed', { id: toastId });
+          toast.success("Availability removed", { id: toastId });
         } catch (error) {
           const errorMessage = parseError(error);
-          console.error('Failed to remove availability:', errorMessage);
+          console.error("Failed to remove availability:", errorMessage);
           toast.error(`Failed to remove availability: ${errorMessage}`, {
             id: toastId,
           });
@@ -89,12 +87,12 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
         }
       }
     },
-    [isDrawMode, onDeleteEvent],
+    [isDrawMode, onDeleteEvent]
   );
 
   const handleNameSubmit = async (userName: string) => {
     if (!selectedSlot) {
-      throw new Error('No slot selected');
+      throw new Error("No slot selected");
     }
 
     try {
@@ -116,20 +114,20 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
 
   // Navigation handlers
   const handleNavigate = useCallback(
-    (action: 'PREV' | 'NEXT' | 'TODAY') => {
-      if (action === 'TODAY') {
+    (action: "PREV" | "NEXT" | "TODAY") => {
+      if (action === "TODAY") {
         setCurrentDate(new Date());
-      } else if (action === 'NEXT') {
+      } else if (action === "NEXT") {
         const newDate = new Date(currentDate);
         newDate.setMonth(newDate.getMonth() + 1);
         setCurrentDate(newDate);
-      } else if (action === 'PREV') {
+      } else if (action === "PREV") {
         const newDate = new Date(currentDate);
         newDate.setMonth(newDate.getMonth() - 1);
         setCurrentDate(newDate);
       }
     },
-    [currentDate],
+    [currentDate]
   );
 
   // Style events based on their color
@@ -138,16 +136,16 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
       return {
         style: {
           backgroundColor: event.color,
-          borderRadius: '4px',
+          borderRadius: "4px",
           opacity: 0.9,
-          color: 'white',
-          border: '0px',
-          display: 'block',
-          cursor: !isDrawMode ? 'pointer' : 'default',
+          color: "white",
+          border: "0px",
+          display: "block",
+          cursor: isDrawMode ? "default" : "pointer",
         },
       };
     },
-    [isDrawMode],
+    [isDrawMode]
   );
 
   // Memoized configuration
@@ -155,7 +153,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
     () => ({
       scrollToTime: new Date(1970, 1, 1, 6),
     }),
-    [],
+    []
   );
 
   // Calendar components customization
@@ -166,23 +164,23 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
         <div className="mb-4 flex items-center gap-x-6">
           <ToggleGroup type="single" variant="outline">
             <ToggleGroupItem
-              value="back"
               className="gap-1"
-              onClick={() => handleNavigate('PREV')}
+              onClick={() => handleNavigate("PREV")}
+              value="back"
             >
               <CaretLeftIcon className="size-4" />
               Back
             </ToggleGroupItem>
             <ToggleGroupItem
+              onClick={() => handleNavigate("TODAY")}
               value="today"
-              onClick={() => handleNavigate('TODAY')}
             >
               Today
             </ToggleGroupItem>
             <ToggleGroupItem
-              value="next"
               className="gap-1"
-              onClick={() => handleNavigate('NEXT')}
+              onClick={() => handleNavigate("NEXT")}
+              value="next"
             >
               Next
               <CaretRightIcon className="size-4" />
@@ -192,7 +190,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
         </div>
       ),
     }),
-    [handleNavigate],
+    [handleNavigate]
   );
 
   return (
@@ -200,39 +198,39 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
       <Card className="flex-1 overflow-hidden" id="tour-step-2">
         <CardContent className="h-full">
           <BigCalendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            titleAccessor="title"
-            date={currentDate}
-            onNavigate={setCurrentDate}
-            view={currentView}
-            onView={setCurrentView}
-            views={[Views.MONTH]}
-            onSelectSlot={handleSelectSlot}
-            onSelectEvent={handleSelectEvent}
-            selectable={isDrawMode}
-            scrollToTime={scrollToTime}
-            dayLayoutAlgorithm="no-overlap"
-            eventPropGetter={eventStyleGetter}
-            components={components}
-            popup
             className={cn(
-              'h-full min-h-160',
+              "h-full min-h-160",
               isDrawMode
-                ? '[&>div]:last:cursor-crosshair'
-                : '[&>div]:last:cursor-not-allowed',
+                ? "[&>div]:last:cursor-crosshair"
+                : "[&>div]:last:cursor-not-allowed"
             )}
+            components={components}
+            date={currentDate}
+            dayLayoutAlgorithm="no-overlap"
+            endAccessor="end"
+            eventPropGetter={eventStyleGetter}
+            events={events}
+            localizer={localizer}
+            onNavigate={setCurrentDate}
+            onSelectEvent={handleSelectEvent}
+            onSelectSlot={handleSelectSlot}
+            onView={setCurrentView}
+            popup
+            scrollToTime={scrollToTime}
+            selectable={isDrawMode}
+            startAccessor="start"
+            titleAccessor="title"
+            view={currentView}
+            views={[Views.MONTH]}
           />
         </CardContent>
       </Card>
 
       <MarkAvailabilityDialog
-        open={showNameDialog}
         onOpenChange={handleDialogOpenChange}
-        selectedSlot={selectedSlot}
         onSubmit={handleNameSubmit}
+        open={showNameDialog}
+        selectedSlot={selectedSlot}
       />
     </>
   );

@@ -1,7 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
 
 import {
   ArrowCounterClockwiseIcon,
@@ -13,19 +10,20 @@ import {
   HouseIcon,
   KeyIcon,
   XCircleIcon,
-} from '@phosphor-icons/react';
-
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Spinner } from '@/components/spinner';
+} from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Spinner } from "@/components/spinner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface LoadingStep {
   id: string;
   label: string;
   icon: React.ReactNode;
-  status: 'pending' | 'loading' | 'complete';
+  status: "pending" | "loading" | "complete";
 }
 
 interface LoadingScreenProps {
@@ -35,7 +33,7 @@ interface LoadingScreenProps {
 }
 
 export function LoadingScreen({
-  currentStep = 'connecting',
+  currentStep = "connecting",
   error,
   onRetry,
 }: LoadingScreenProps) {
@@ -44,28 +42,28 @@ export function LoadingScreen({
   const [progress, setProgress] = useState(0);
   const [steps, setSteps] = useState<LoadingStep[]>([
     {
-      id: 'connecting',
-      label: 'Connecting to calendar service',
+      id: "connecting",
+      label: "Connecting to calendar service",
       icon: <HardDrivesIcon className="size-5" />,
-      status: 'loading',
+      status: "loading",
     },
     {
-      id: 'verifying',
-      label: 'Verifying credentials',
+      id: "verifying",
+      label: "Verifying credentials",
       icon: <KeyIcon className="size-5" />,
-      status: 'pending',
+      status: "pending",
     },
     {
-      id: 'loading',
-      label: 'Loading events',
+      id: "loading",
+      label: "Loading events",
       icon: <CalendarDotsIcon className="size-5" />,
-      status: 'pending',
+      status: "pending",
     },
     {
-      id: 'syncing',
-      label: 'Setting up real-time sync',
+      id: "syncing",
+      label: "Setting up real-time sync",
       icon: <ArrowsLeftRightIcon className="size-5" />,
-      status: 'pending',
+      status: "pending",
     },
   ]);
 
@@ -81,30 +79,30 @@ export function LoadingScreen({
         ...step,
         status:
           index < stepIndex
-            ? 'complete'
+            ? "complete"
             : index === stepIndex
-              ? 'loading'
-              : 'pending',
-      })),
+              ? "loading"
+              : "pending",
+      }))
     );
   }, [currentStep]);
 
   const getStepIcon = (step: LoadingStep) => {
-    if (step.status === 'complete') {
+    if (step.status === "complete") {
       return (
         <div className="flex size-5 items-center justify-center">
           <CheckCircleIcon className="size-5 text-green-500" />
         </div>
       );
     }
-    if (error && step.status === 'loading') {
+    if (error && step.status === "loading") {
       return (
         <div className="flex size-5 items-center justify-center">
-          <XCircleIcon className="text-destructive size-5" />
+          <XCircleIcon className="size-5 text-destructive" />
         </div>
       );
     }
-    if (step.status === 'loading') {
+    if (step.status === "loading") {
       return (
         <div className="flex size-5 items-center justify-center">
           <Spinner size="sm" variant="primary" />
@@ -120,34 +118,28 @@ export function LoadingScreen({
 
   const getStepTextClass = (status: string) => {
     switch (status) {
-      case 'complete':
-        return 'text-green-600 dark:text-green-400';
-      case 'loading':
-        return 'text-foreground font-medium';
-      case 'pending':
-        return 'text-muted-foreground';
+      case "complete":
+        return "text-green-600 dark:text-green-400";
+      case "loading":
+        return "text-foreground font-medium";
+      case "pending":
+        return "text-muted-foreground";
       default:
-        return '';
+        return "";
     }
   };
 
   return (
-    <div
-      className="animate-fade-in absolute inset-0 flex items-center
-        justify-center p-4"
-    >
+    <div className="absolute inset-0 flex animate-fade-in items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent>
           <div className="space-y-6">
             {/* Header */}
             <div className="space-y-2 text-center">
-              <div
-                className="bg-primary/10 inline-flex size-12 items-center
-                  justify-center rounded-full"
-              >
-                <CalendarBlankIcon className="text-primary size-6" />
+              <div className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10">
+                <CalendarBlankIcon className="size-6 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold">Loading Calendar</h2>
+              <h2 className="font-semibold text-xl">Loading Calendar</h2>
               <p className="text-muted-foreground text-sm">
                 Please wait while we set everything up
               </p>
@@ -156,11 +148,11 @@ export function LoadingScreen({
             {/* Progress Bar */}
             <div className="space-y-2">
               <Progress
-                value={progress}
-                className="h-2"
                 aria-label="Loading progress"
+                className="h-2"
+                value={progress}
               />
-              <p className="text-muted-foreground text-center text-xs">
+              <p className="text-center text-muted-foreground text-xs">
                 {Math.round(progress)}% complete
               </p>
             </div>
@@ -169,13 +161,12 @@ export function LoadingScreen({
             <div className="space-y-3">
               {steps.map((step) => (
                 <div
+                  className="flex items-center gap-3 transition-all duration-300"
                   key={step.id}
-                  className="flex items-center gap-3 transition-all
-                    duration-300"
                 >
                   {getStepIcon(step)}
                   <span
-                    className={cn('text-sm', getStepTextClass(step.status))}
+                    className={cn("text-sm", getStepTextClass(step.status))}
                   >
                     {step.label}
                   </span>
@@ -186,25 +177,25 @@ export function LoadingScreen({
             {/* Error Message */}
             {error && (
               <div className="space-y-3">
-                <div className="bg-destructive/10 rounded-lg p-3">
-                  <p className="text-destructive text-center text-sm">
+                <div className="rounded-lg bg-destructive/10 p-3">
+                  <p className="text-center text-destructive text-sm">
                     {error}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => router.push('/')}
-                    variant="secondary"
                     className="flex-1"
+                    onClick={() => router.push("/")}
+                    variant="secondary"
                   >
                     <HouseIcon className="size-5" />
                     Go to Home
                   </Button>
                   {onRetry && (
                     <Button
+                      className="flex-1"
                       onClick={onRetry}
                       variant="default"
-                      className="flex-1"
                     >
                       <ArrowCounterClockwiseIcon className="size-5" />
                       Start Over

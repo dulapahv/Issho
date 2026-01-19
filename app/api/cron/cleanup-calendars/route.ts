@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
 // import { checkBotId } from 'botid/server';
 
@@ -8,8 +8,8 @@ import {
   HTTP_STATUS,
   IS_DEV_ENV,
   SUCCESS_MESSAGES,
-} from '@/lib/constants';
-import { prisma } from '@/lib/prisma';
+} from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Vercel Cron Job to clean up old calendars
@@ -19,14 +19,14 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     // Verify this is a legitimate cron job request from Vercel
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
     // In production, verify the request is from Vercel
     if (!IS_DEV_ENV) {
       // Check if request is from Vercel Cron
-      const userAgent = request.headers.get('user-agent');
-      if (!userAgent?.includes('vercel-cron/1.0')) {
+      const userAgent = request.headers.get("user-agent");
+      if (!userAgent?.includes("vercel-cron/1.0")) {
         // If not from Vercel Cron, check BotID to prevent abuse
         // const verification = await checkBotId({
         //   developmentOptions: IS_DEV_ENV ? { bypass: 'HUMAN' } : undefined,
@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
 
       // Additional security: Use a secret token in production
       if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-        console.error('Invalid cron secret');
+        console.error("Invalid cron secret");
         return NextResponse.json(
           { error: ERROR_MESSAGES.AUTH.UNAUTHORIZED },
-          { status: HTTP_STATUS.UNAUTHORIZED },
+          { status: HTTP_STATUS.UNAUTHORIZED }
         );
       }
     }
@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
     cutoffDate.setDate(cutoffDate.getDate() - CLEANUP.DAYS_UNTIL_DELETION);
 
     console.log(
-      `[Cron] Starting calendar cleanup job at ${new Date().toISOString()}`,
+      `[Cron] Starting calendar cleanup job at ${new Date().toISOString()}`
     );
     console.log(
-      `[Cron] Deleting calendars not updated since ${cutoffDate.toISOString()}`,
+      `[Cron] Deleting calendars not updated since ${cutoffDate.toISOString()}`
     );
 
     // First, get the count of calendars to delete
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (countToDelete === 0) {
-      console.log('[Cron] No calendars to delete');
+      console.log("[Cron] No calendars to delete");
       return NextResponse.json({
         success: true,
         message: SUCCESS_MESSAGES.CLEANUP.NO_CALENDARS,
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
     if (IS_DEV_ENV) {
       calendarsToDelete.forEach((cal) => {
         console.log(
-          `[Cron] Deleting calendar: ${cal.id} - "${cal.name}" (${cal._count.events} events, last updated: ${cal.updatedAt.toISOString()})`,
+          `[Cron] Deleting calendar: ${cal.id} - "${cal.name}" (${cal._count.events} events, last updated: ${cal.updatedAt.toISOString()})`
         );
       });
     }
@@ -144,47 +144,47 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     };
 
-    console.log(`[Cron] Cleanup completed:`, result);
+    console.log("[Cron] Cleanup completed:", result);
 
     // Log to monitoring service if available
     if (process.env.MONITORING_WEBHOOK_URL) {
       try {
         await fetch(process.env.MONITORING_WEBHOOK_URL, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            job: 'cleanup-calendars',
+            job: "cleanup-calendars",
             ...result,
           }),
         });
       } catch (error) {
-        console.error('[Cron] Failed to send monitoring webhook:', error);
+        console.error("[Cron] Failed to send monitoring webhook:", error);
       }
     }
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[Cron] Calendar cleanup job failed:', error);
+    console.error("[Cron] Calendar cleanup job failed:", error);
 
     // Log error to monitoring service if available
     if (process.env.MONITORING_WEBHOOK_URL) {
       try {
         await fetch(process.env.MONITORING_WEBHOOK_URL, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            job: 'cleanup-calendars',
+            job: "cleanup-calendars",
             error: true,
-            message: error instanceof Error ? error.message : 'Unknown error',
+            message: error instanceof Error ? error.message : "Unknown error",
             timestamp: new Date().toISOString(),
           }),
         });
       } catch (webhookError) {
-        console.error('[Cron] Failed to send error webhook:', webhookError);
+        console.error("[Cron] Failed to send error webhook:", webhookError);
       }
     }
 
@@ -192,10 +192,10 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: ERROR_MESSAGES.CLEANUP.JOB_FAILED,
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

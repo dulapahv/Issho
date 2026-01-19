@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next';
-
-import { withBotId } from 'botid/next/config';
+import { withBotId } from "botid/next/config";
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -11,13 +10,13 @@ const nextConfig: NextConfig = {
   experimental: {
     typedEnv: true,
     viewTransition: true,
-    optimizePackageImports: ['@phosphor-icons/react'],
+    optimizePackageImports: ["@phosphor-icons/react"],
   },
   async redirects() {
     return [
       {
-        source: '/admin',
-        destination: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        source: "/admin",
+        destination: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         permanent: false,
       },
     ];

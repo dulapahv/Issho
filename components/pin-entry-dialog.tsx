@@ -1,12 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-
-import { SignInIcon } from '@phosphor-icons/react';
-import * as Form from '@radix-ui/react-form';
-import { isMobile } from 'react-device-detect';
-
-import { parseError } from '@/lib/utils';
+import { SignInIcon } from "@phosphor-icons/react";
+import * as Form from "@radix-ui/react-form";
+import { useState } from "react";
+import { isMobile } from "react-device-detect";
+import { Spinner } from "@/components/spinner";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -14,8 +12,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -24,9 +22,9 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer';
-import { Input } from '@/components/ui/input';
-import { Spinner } from '@/components/spinner';
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { parseError } from "@/lib/utils";
 
 interface PinEntryDialogProps {
   open: boolean;
@@ -40,16 +38,16 @@ export function PinEntryDialog({
   onCancel,
 }: PinEntryDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [serverError, setServerError] = useState('');
+  const [serverError, setServerError] = useState("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const pin = formData.get('pin') as string;
+    const pin = formData.get("pin") as string;
 
     setIsLoading(true);
-    setServerError('');
+    setServerError("");
 
     try {
       await onSubmit(pin);
@@ -63,39 +61,36 @@ export function PinEntryDialog({
 
   const handleCancel = () => {
     // Reset errors when canceling
-    setServerError('');
+    setServerError("");
     onCancel();
   };
 
   // Shared form content component
   const FormContent = () => (
     <Form.Root
+      onClearServerErrors={() => setServerError("")}
       onSubmit={handleSubmit}
-      onClearServerErrors={() => setServerError('')}
     >
       <div className="grid gap-4 pb-4">
-        <Form.Field name="pin" className="grid gap-2">
+        <Form.Field className="grid gap-2" name="pin">
           <div className="flex items-baseline justify-between">
-            <Form.Label
-              className="text-sm leading-none font-medium
-                peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
+            <Form.Label className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               PIN (6 digits)
             </Form.Label>
             <Form.Message
-              className="text-destructive text-[13px]"
+              className="text-[13px] text-destructive"
               match="valueMissing"
             >
               Please enter a PIN
             </Form.Message>
             <Form.Message
-              className="text-destructive text-[13px]"
+              className="text-[13px] text-destructive"
               match="patternMismatch"
             >
               PIN must be 6 digits
             </Form.Message>
             <Form.Message
-              className="text-destructive text-[13px]"
+              className="text-[13px] text-destructive"
               match={(value) => !!value && value.length !== 6}
             >
               PIN must be exactly 6 digits
@@ -103,27 +98,26 @@ export function PinEntryDialog({
           </div>
           <Form.Control asChild>
             <Input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              placeholder="000000"
-              required
-              disabled={isLoading}
               autoFocus
-              className="data-invalid:border-destructive font-mono
-                tracking-[0.5em]"
+              className="font-mono tracking-[0.5em] data-invalid:border-destructive"
+              disabled={isLoading}
+              inputMode="numeric"
+              maxLength={6}
               onChange={(e) => {
                 // Only allow digits
-                const value = e.target.value.replace(/\D/g, '');
+                const value = e.target.value.replace(/\D/g, "");
                 if (value.length <= 6) {
                   e.target.value = value;
                   // Clear server error when user starts typing
                   if (serverError) {
-                    setServerError('');
+                    setServerError("");
                   }
                 }
               }}
+              pattern="[0-9]{6}"
+              placeholder="000000"
+              required
+              type="text"
             />
           </Form.Control>
         </Form.Field>
@@ -138,17 +132,17 @@ export function PinEntryDialog({
       {!isMobile && (
         <AlertDialogFooter>
           <Button
+            disabled={isLoading}
+            onClick={handleCancel}
             type="button"
             variant="outline"
-            onClick={handleCancel}
-            disabled={isLoading}
           >
             Cancel
           </Button>
           <Form.Submit asChild>
             <Button disabled={isLoading}>
               {isLoading ? (
-                <Spinner variant="secondary" size="sm" />
+                <Spinner size="sm" variant="secondary" />
               ) : (
                 <SignInIcon className="size-5" />
               )}
@@ -162,9 +156,9 @@ export function PinEntryDialog({
       {isMobile && (
         <DrawerFooter className="px-0">
           <Form.Submit asChild>
-            <Button disabled={isLoading} size="lg" className="w-full">
+            <Button className="w-full" disabled={isLoading} size="lg">
               {isLoading ? (
-                <Spinner variant="secondary" size="sm" />
+                <Spinner size="sm" variant="secondary" />
               ) : (
                 <SignInIcon className="size-5" />
               )}
@@ -173,12 +167,12 @@ export function PinEntryDialog({
           </Form.Submit>
           <DrawerClose asChild>
             <Button
+              className="w-full"
+              disabled={isLoading}
+              onClick={handleCancel}
+              size="lg"
               type="button"
               variant="outline"
-              onClick={handleCancel}
-              disabled={isLoading}
-              size="lg"
-              className="w-full"
             >
               Cancel
             </Button>
@@ -192,14 +186,14 @@ export function PinEntryDialog({
   if (isMobile) {
     return (
       <Drawer
-        open={open}
+        dismissible={false}
         onOpenChange={(newOpen) => {
           // Only allow closing via the Cancel button
-          if (!newOpen && !isLoading) {
+          if (!(newOpen || isLoading)) {
             handleCancel();
           }
         }}
-        dismissible={false}
+        open={open}
       >
         <DrawerContent>
           <DrawerHeader>

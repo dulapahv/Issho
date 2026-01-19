@@ -1,34 +1,32 @@
-'use client';
-
-import { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+"use client";
 
 import {
   CalendarDotsIcon,
   SignInIcon,
   SparkleIcon,
   UserPlusIcon,
-} from '@phosphor-icons/react';
-import * as Form from '@radix-ui/react-form';
-
-import { parseError } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Spinner } from '@/components/spinner';
+} from "@phosphor-icons/react";
+import * as Form from "@radix-ui/react-form";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Spinner } from "@/components/spinner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { parseError } from "@/lib/utils";
 
 export function WelcomeScreen() {
   const router = useRouter();
 
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [serverError, setServerError] = useState('');
+  const [serverError, setServerError] = useState("");
 
   const handleCreateCalendar = async () => {
     try {
-      const response = await fetch('/api/calendar/create', {
-        method: 'POST',
+      const response = await fetch("/api/calendar/create", {
+        method: "POST",
       });
 
       if (!response.ok) {
@@ -56,9 +54,9 @@ export function WelcomeScreen() {
 
   const handleJoinCalendar = async (id: string, pin: string) => {
     try {
-      const response = await fetch('/api/calendar/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/calendar/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, pin }),
       });
 
@@ -85,7 +83,7 @@ export function WelcomeScreen() {
 
   const handleCreate = async () => {
     setIsCreating(true);
-    setServerError('');
+    setServerError("");
     try {
       await handleCreateCalendar();
     } catch (error) {
@@ -101,12 +99,12 @@ export function WelcomeScreen() {
     const data = Object.fromEntries(new FormData(event.currentTarget));
 
     setIsJoining(true);
-    setServerError('');
+    setServerError("");
 
     try {
       await handleJoinCalendar(
-        data['calendar-id'] as string,
-        data.pin as string,
+        data["calendar-id"] as string,
+        data.pin as string
       );
     } catch (error) {
       const errorMessage = parseError(error);
@@ -119,23 +117,15 @@ export function WelcomeScreen() {
   return (
     <div className="flex min-h-screen overflow-hidden">
       {/* Left Side - Actions */}
-      <div
-        className="flex w-full flex-col p-8 lg:w-2/5 lg:p-12 xl:w-[45%] xl:p-16"
-      >
-        <div
-          className="mx-auto flex w-full max-w-md flex-1 flex-col
-            justify-center"
-        >
+      <div className="flex w-full flex-col p-8 lg:w-2/5 lg:p-12 xl:w-[45%] xl:p-16">
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
           {/* Logo/Brand (optional) */}
           <div className="mb-8 lg:mb-12">
             <div className="mb-6">
-              <h1
-                className="from-primary to-primary/60 bg-linear-to-r
-                  bg-clip-text text-4xl font-bold text-transparent lg:text-5xl"
-              >
+              <h1 className="bg-linear-to-r from-primary to-primary/60 bg-clip-text font-bold text-4xl text-transparent lg:text-5xl">
                 Issho
               </h1>
-              <p className="text-muted-foreground mt-3 text-lg">
+              <p className="mt-3 text-lg text-muted-foreground">
                 Plan with friends faster — mark availability and find the best
                 time together, no signup required.
               </p>
@@ -145,27 +135,24 @@ export function WelcomeScreen() {
           {/* Create Calendar Section */}
           <div className="mb-8">
             <div className="mb-6 flex items-center gap-3">
-              <div
-                className="bg-primary/10 flex size-10 items-center
-                  justify-center rounded-lg"
-              >
-                <CalendarDotsIcon className="text-primary size-5" />
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <CalendarDotsIcon className="size-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Start Fresh</h2>
+                <h2 className="font-semibold text-lg">Start Fresh</h2>
                 <p className="text-muted-foreground text-sm">
                   Create a new shared calendar
                 </p>
               </div>
             </div>
             <Button
-              onClick={handleCreate}
-              disabled={isCreating || isJoining}
               className="w-full"
+              disabled={isCreating || isJoining}
+              onClick={handleCreate}
               size="lg"
             >
               {isCreating ? (
-                <Spinner variant="secondary" size="sm" />
+                <Spinner size="sm" variant="secondary" />
               ) : (
                 <SparkleIcon className="size-5" />
               )}
@@ -178,7 +165,7 @@ export function WelcomeScreen() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background text-muted-foreground px-3">
+              <span className="bg-background px-3 text-muted-foreground">
                 Or
               </span>
             </div>
@@ -187,14 +174,11 @@ export function WelcomeScreen() {
           {/* Join Calendar Section */}
           <div>
             <div className="mb-6 flex items-center gap-3">
-              <div
-                className="bg-primary/10 flex size-10 items-center
-                  justify-center rounded-lg"
-              >
-                <UserPlusIcon className="text-primary size-5" />
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <UserPlusIcon className="size-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Join Friends</h2>
+                <h2 className="font-semibold text-lg">Join Friends</h2>
                 <p className="text-muted-foreground text-sm">
                   Enter calendar details to join
                 </p>
@@ -203,20 +187,17 @@ export function WelcomeScreen() {
 
             <Form.Root
               className="space-y-4"
+              onClearServerErrors={() => setServerError("")}
               onSubmit={handleJoinSubmit}
-              onClearServerErrors={() => setServerError('')}
             >
               {/* Calendar ID Field */}
               <Form.Field name="calendar-id">
                 <div className="flex items-baseline justify-between">
-                  <Form.Label
-                    className="text-sm leading-none font-medium
-                      peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
+                  <Form.Label className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Calendar ID
                   </Form.Label>
                   <Form.Message
-                    className="text-destructive text-[13px]"
+                    className="text-[13px] text-destructive"
                     match="valueMissing"
                   >
                     Please enter a calendar ID
@@ -224,12 +205,11 @@ export function WelcomeScreen() {
                 </div>
                 <Form.Control asChild>
                   <Input
-                    className="data-invalid:border-destructive mt-2 font-mono
-                      tracking-widest"
-                    type="text"
+                    className="mt-2 font-mono tracking-widest data-invalid:border-destructive"
+                    disabled={isCreating || isJoining}
                     placeholder="Enter calendar ID"
                     required
-                    disabled={isCreating || isJoining}
+                    type="text"
                   />
                 </Form.Control>
               </Form.Field>
@@ -237,26 +217,23 @@ export function WelcomeScreen() {
               {/* PIN Field */}
               <Form.Field name="pin">
                 <div className="flex items-baseline justify-between">
-                  <Form.Label
-                    className="text-sm leading-none font-medium
-                      peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
+                  <Form.Label className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     PIN (6 digits)
                   </Form.Label>
                   <Form.Message
-                    className="text-destructive text-[13px]"
+                    className="text-[13px] text-destructive"
                     match="valueMissing"
                   >
                     Please enter a PIN
                   </Form.Message>
                   <Form.Message
-                    className="text-destructive text-[13px]"
+                    className="text-[13px] text-destructive"
                     match="patternMismatch"
                   >
                     PIN must be exactly 6 digits
                   </Form.Message>
                   <Form.Message
-                    className="text-destructive text-[13px]"
+                    className="text-[13px] text-destructive"
                     match={(value) => !!value && value.length !== 6}
                   >
                     PIN must be exactly 6 digits
@@ -264,22 +241,21 @@ export function WelcomeScreen() {
                 </div>
                 <Form.Control asChild>
                   <Input
-                    className="data-invalid:border-destructive mt-2 font-mono
-                      tracking-[0.5em]"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
-                    placeholder="000000"
-                    required
+                    className="mt-2 font-mono tracking-[0.5em] data-invalid:border-destructive"
                     disabled={isCreating || isJoining}
+                    inputMode="numeric"
+                    maxLength={6}
                     onChange={(e) => {
                       // Only allow digits
-                      const value = e.target.value.replace(/\D/g, '');
+                      const value = e.target.value.replace(/\D/g, "");
                       if (value.length <= 6) {
                         e.target.value = value;
                       }
                     }}
+                    pattern="[0-9]{6}"
+                    placeholder="000000"
+                    required
+                    type="text"
                   />
                 </Form.Control>
               </Form.Field>
@@ -287,10 +263,10 @@ export function WelcomeScreen() {
               {/* Submit Button */}
               <Form.Submit asChild>
                 <Button
-                  disabled={isJoining || isCreating}
-                  variant="outline"
                   className="w-full"
+                  disabled={isJoining || isCreating}
                   size="lg"
+                  variant="outline"
                 >
                   {isJoining ? (
                     <Spinner size="sm" />
@@ -305,10 +281,7 @@ export function WelcomeScreen() {
 
           {/* Server Error Message */}
           {serverError && (
-            <div
-              className="bg-destructive/10 border-destructive/20 mt-6 rounded-lg
-                border p-3"
-            >
+            <div className="mt-6 rounded-lg border border-destructive/20 bg-destructive/10 p-3">
               <p className="text-destructive text-sm">{serverError}</p>
             </div>
           )}
@@ -318,27 +291,21 @@ export function WelcomeScreen() {
       {/* Right Side - Image with overflow effect */}
       <div className="relative hidden lg:block lg:w-3/5 xl:w-[55%]">
         {/* Gradient overlay for smooth transition */}
-        <div
-          className="from-background absolute inset-y-0 left-0 z-10 w-32
-            bg-linear-to-r to-transparent"
-        />
+        <div className="absolute inset-y-0 left-0 z-10 w-32 bg-linear-to-r from-background to-transparent" />
 
         {/* Image container with overflow */}
         <div className="relative h-full w-[110%] select-none">
           <Image
-            src="/welcome.png"
             alt="Calendar collaboration illustration"
-            fill
             className="object-cover object-left"
+            fill
             priority
             quality={100}
             sizes="(max-width: 1023px) 0vw, (max-width: 1279px) 150vw, (max-width: 1535px) 120vw, 100vw"
+            src="/welcome.png"
           />
 
-          <div
-            className="from-primary/5 to-primary/10 absolute inset-0
-              bg-linear-to-br via-transparent"
-          />
+          <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-primary/10" />
         </div>
       </div>
     </div>

@@ -1,18 +1,16 @@
-'use client';
-
-import { useState } from 'react';
+"use client";
 
 import {
   ArrowsClockwiseIcon,
   CheckIcon,
   CopyIcon,
   LinkIcon,
-} from '@phosphor-icons/react';
-import { isMobile } from 'react-device-detect';
-import { toast } from 'sonner';
-
-import { parseError } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+} from "@phosphor-icons/react";
+import { useState } from "react";
+import { isMobile } from "react-device-detect";
+import { toast } from "sonner";
+import { Spinner } from "@/components/spinner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -20,7 +18,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -29,11 +27,11 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Spinner } from '@/components/spinner';
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { parseError } from "@/lib/utils";
 
 interface ShareDialogProps {
   open: boolean;
@@ -80,9 +78,9 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
     setIsRotatingPin(true);
     try {
       const response = await fetch(`/api/calendar/${calendarId}/rotate-pin`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${pin}`,
         },
       });
@@ -96,7 +94,7 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
 
       const data = await response.json();
       onPinRotated(data.pin);
-      toast.success('PIN updated successfully');
+      toast.success("PIN updated successfully");
     } catch (error) {
       const errorMessage = parseError(error);
       console.error(`Failed to update PIN: ${errorMessage}`);
@@ -113,17 +111,17 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
         <Label htmlFor="share-url">Invite URL</Label>
         <div className="flex gap-2">
           <Input
-            id="share-url"
-            value={calendarUrl}
-            readOnly
             className="font-mono text-sm"
+            id="share-url"
+            readOnly
+            value={calendarUrl}
           />
           <Button
+            onClick={() => handleCopy(calendarUrl, "url")}
             size="icon"
             variant="outline"
-            onClick={() => handleCopy(calendarUrl, 'url')}
           >
-            {copiedField === 'url' ? (
+            {copiedField === "url" ? (
               <CheckIcon className="size-5" />
             ) : (
               <CopyIcon className="size-5" />
@@ -138,17 +136,17 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
         <Label htmlFor="share-id">Calendar ID</Label>
         <div className="flex gap-2">
           <Input
-            id="share-id"
-            value={calendarId}
-            readOnly
             className="font-mono tracking-widest"
+            id="share-id"
+            readOnly
+            value={calendarId}
           />
           <Button
+            onClick={() => handleCopy(calendarId, "id")}
             size="icon"
             variant="outline"
-            onClick={() => handleCopy(calendarId, 'id')}
           >
-            {copiedField === 'id' ? (
+            {copiedField === "id" ? (
               <CheckIcon className="size-5" />
             ) : (
               <CopyIcon className="size-5" />
@@ -161,11 +159,11 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
         <div className="flex items-center justify-between">
           <Label htmlFor="share-pin">PIN</Label>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRotatePin}
-            disabled={isRotatingPin}
             className="h-7 text-xs"
+            disabled={isRotatingPin}
+            onClick={handleRotatePin}
+            size="sm"
+            variant="ghost"
           >
             {isRotatingPin ? (
               <Spinner size="sm" />
@@ -177,17 +175,17 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
         </div>
         <div className="flex gap-2">
           <Input
-            id="share-pin"
-            value={pin}
-            readOnly
             className="font-mono tracking-[0.5em]"
+            id="share-pin"
+            readOnly
+            value={pin}
           />
           <Button
+            onClick={() => handleCopy(pin, "pin")}
             size="icon"
             variant="outline"
-            onClick={() => handleCopy(pin, 'pin')}
           >
-            {copiedField === 'pin' ? (
+            {copiedField === "pin" ? (
               <CheckIcon className="size-5" />
             ) : (
               <CopyIcon className="size-5" />
@@ -203,7 +201,7 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
   // Mobile: Use Drawer
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer onOpenChange={onOpenChange} open={open}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Share Calendar</DrawerTitle>
@@ -217,12 +215,12 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
           </div>
           <DrawerFooter>
             <Button
-              onClick={() => handleCopy(shareMessage, 'all')}
               className="w-full"
-              variant="default"
+              onClick={() => handleCopy(shareMessage, "all")}
               size="lg"
+              variant="default"
             >
-              {copiedField === 'all' ? (
+              {copiedField === "all" ? (
                 <>
                   <CheckIcon className="size-5" />
                   Message Copied!
@@ -236,10 +234,10 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
             </Button>
             <DrawerClose asChild>
               <Button
-                variant="outline"
                 className="w-full"
-                size="lg"
                 onClick={() => onOpenChange(false)}
+                size="lg"
+                variant="outline"
               >
                 Close
               </Button>
@@ -252,7 +250,7 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
 
   // Desktop/Tablet: Use Dialog
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="gap-6 sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Share Calendar</DialogTitle>
@@ -264,11 +262,11 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
         <ShareContent />
         <div className="flex flex-col gap-2">
           <Button
-            onClick={() => handleCopy(shareMessage, 'all')}
             className="w-full"
+            onClick={() => handleCopy(shareMessage, "all")}
             variant="default"
           >
-            {copiedField === 'all' ? (
+            {copiedField === "all" ? (
               <>
                 <CheckIcon className="size-5" />
                 Message Copied!
@@ -282,9 +280,9 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
           </Button>
           <DialogClose asChild>
             <Button
-              variant="outline"
               className="w-full"
               onClick={() => onOpenChange(false)}
+              variant="outline"
             >
               Close
             </Button>

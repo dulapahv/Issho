@@ -1,11 +1,10 @@
-import { ViewTransition } from 'react';
-import type { Metadata, Viewport } from 'next';
-
-import { GeistMono } from 'geist/font/mono';
-import { GeistSans } from 'geist/font/sans';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from 'sonner';
-
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
+import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "next-themes";
+import { ViewTransition } from "react";
+import { Toaster } from "sonner";
+import { Analytics } from "@/components/analytics";
 import {
   AUTHOR_BASE_URL,
   AUTHOR_NAME,
@@ -13,11 +12,10 @@ import {
   BASE_URL,
   DESCRIPTION,
   NAME,
-} from '@/lib/constants';
-import { cn } from '@/lib/utils';
-import { Analytics } from '@/components/analytics';
+} from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
-import './globals.css';
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: `${NAME} - Plan with friends, faster`,
@@ -25,12 +23,12 @@ export const metadata: Metadata = {
   applicationName: NAME,
   metadataBase: new URL(BASE_URL),
   keywords: [
-    'calendar',
-    'planning',
-    'productivity',
-    'collaboration',
-    'meeting',
-    'overlap',
+    "calendar",
+    "planning",
+    "productivity",
+    "collaboration",
+    "meeting",
+    "overlap",
   ],
   authors: {
     name: AUTHOR_NAME,
@@ -42,15 +40,15 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: "default",
     title: NAME,
   },
   openGraph: {
     title: NAME,
     description: DESCRIPTION,
-    type: 'website',
+    type: "website",
     siteName: NAME,
-    locale: 'en_US',
+    locale: "en_US",
     url: BASE_URL,
   },
   publisher: AUTHOR_NAME,
@@ -58,7 +56,7 @@ export const metadata: Metadata = {
     title: NAME,
     description: DESCRIPTION,
     creatorId: AUTHOR_TWITTER_HANDLE,
-    card: 'summary_large_image',
+    card: "summary_large_image",
     creator: AUTHOR_TWITTER_HANDLE,
   },
   alternates: {
@@ -68,28 +66,28 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   // themeColor: '#0a0a0a',
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   userScalable: false,
   maximumScale: 1,
-  viewportFit: 'cover',
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
       className={cn(
         GeistSans.variable,
         GeistMono.variable,
-        'text-pretty antialiased',
+        "text-pretty antialiased"
       )}
+      lang="en"
       suppressHydrationWarning
     >
       <head>
         <meta name="darkreader-lock" />
       </head>
-      <body className="bg-background text-foreground min-h-screen">
+      <body className="min-h-screen bg-background text-foreground">
         <Analytics />
         <ThemeProvider attribute="class" disableTransitionOnChange>
           <ViewTransition>{children}</ViewTransition>

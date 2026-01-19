@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export interface CalendarEvent {
   id: string;
@@ -24,7 +24,7 @@ export interface CalendarStore {
 
 export const useCalendarStore = create<CalendarStore>((set) => ({
   calendarId: null,
-  calendarName: '',
+  calendarName: "",
   events: [],
   isDrawMode: true,
   setCalendarId: (id) => set({ calendarId: id }),

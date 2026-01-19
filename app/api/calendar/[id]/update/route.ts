@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
 // import { checkBotId } from 'botid/server';
 
-import { ERROR_MESSAGES, HTTP_STATUS, VALIDATION } from '@/lib/constants';
-import { prisma } from '@/lib/prisma';
-import { parseError, verifyPIN } from '@/lib/utils';
+import { ERROR_MESSAGES, HTTP_STATUS, VALIDATION } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { parseError, verifyPIN } from "@/lib/utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: RouteContext<'/api/calendar/[id]/update'>,
+  { params }: RouteContext<"/api/calendar/[id]/update">
 ) {
   // const verification = await checkBotId();
 
@@ -23,11 +23,11 @@ export async function POST(
     const { id } = await params;
     const normalizedId = id.toUpperCase();
 
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+    if (!(authHeader && authHeader.startsWith("Bearer "))) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.AUTH.MISSING_TOKEN },
-        { status: HTTP_STATUS.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(
     if (!calendar) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.NOT_FOUND },
-        { status: HTTP_STATUS.NOT_FOUND },
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
@@ -48,7 +48,7 @@ export async function POST(
     if (!isValid) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.AUTH.INVALID_PIN },
-        { status: HTTP_STATUS.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
@@ -57,7 +57,7 @@ export async function POST(
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.NAME_REQUIRED },
-        { status: HTTP_STATUS.BAD_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -66,14 +66,14 @@ export async function POST(
     if (trimmedName.length < VALIDATION.CALENDAR_NAME.MIN_LENGTH) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.NAME_TOO_SHORT },
-        { status: HTTP_STATUS.BAD_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     if (trimmedName.length > VALIDATION.CALENDAR_NAME.MAX_LENGTH) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.NAME_TOO_LONG },
-        { status: HTTP_STATUS.BAD_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -89,10 +89,10 @@ export async function POST(
     return NextResponse.json(updatedCalendar, { status: HTTP_STATUS.OK });
   } catch (error) {
     const errorMessage = parseError(error);
-    console.error('Error updating calendar:', errorMessage);
+    console.error("Error updating calendar:", errorMessage);
     return NextResponse.json(
       { error: `${ERROR_MESSAGES.CALENDAR.UPDATE_FAILED}: ${errorMessage}` },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

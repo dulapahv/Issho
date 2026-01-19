@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
 // import { checkBotId } from 'botid/server';
 
@@ -7,9 +7,9 @@ import {
   HTTP_STATUS,
   PATTERNS,
   SUCCESS_MESSAGES,
-} from '@/lib/constants';
-import { prisma } from '@/lib/prisma';
-import { parseError, verifyPIN } from '@/lib/utils';
+} from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { parseError, verifyPIN } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   // const verification = await checkBotId();
@@ -24,10 +24,10 @@ export async function POST(request: NextRequest) {
   try {
     const { id, pin } = await request.json();
 
-    if (!id || !pin) {
+    if (!(id && pin)) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.ID_AND_PIN_REQUIRED },
-        { status: HTTP_STATUS.BAD_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (!PATTERNS.PIN.test(pin)) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.PIN.INVALID_FORMAT },
-        { status: HTTP_STATUS.BAD_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (!PATTERNS.CALENDAR_ID.test(normalizedId)) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.VALIDATION.INVALID_REQUEST_DATA },
-        { status: HTTP_STATUS.BAD_REQUEST },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!calendar) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.CALENDAR.NOT_FOUND },
-        { status: HTTP_STATUS.NOT_FOUND },
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     if (!isValidPin) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.AUTH.INVALID_PIN },
-        { status: HTTP_STATUS.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       );
     }
 
@@ -77,14 +77,14 @@ export async function POST(request: NextRequest) {
         events: calendar.events,
         message: SUCCESS_MESSAGES.CALENDAR.JOINED,
       },
-      { status: HTTP_STATUS.OK },
+      { status: HTTP_STATUS.OK }
     );
   } catch (error) {
     const errorMessage = parseError(error);
-    console.error('Error joining calendar:', errorMessage);
+    console.error("Error joining calendar:", errorMessage);
     return NextResponse.json(
       { error: `${ERROR_MESSAGES.CALENDAR.JOIN_FAILED}: ${errorMessage}` },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

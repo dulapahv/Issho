@@ -1,6 +1,6 @@
-import bcrypt from 'bcryptjs';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import bcrypt from "bcryptjs";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -9,10 +9,10 @@ export function cn(...inputs: ClassValue[]) {
 // Generate a deterministic color from a string (name) and return as oklch(...)
 export function generateColorFromName(name: string, minContrast = 4.5): string {
   // Simple deterministic hash (32-bit safe)
-  let hash = 2166136261 >>> 0; // FNV-ish seed
+  let hash = 2_166_136_261 >>> 0; // FNV-ish seed
   for (let i = 0; i < name.length; i++) {
     hash ^= name.charCodeAt(i);
-    hash = Math.imul(hash, 16777619) >>> 0;
+    hash = Math.imul(hash, 16_777_619) >>> 0;
   }
 
   // Use pieces of the hash to derive H,S,L
@@ -67,7 +67,7 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
   // sRGB (0-255) -> linear 0..1 channel
   function srgbToLinearChannel(v: number) {
     const c = v / 255;
-    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    return c <= 0.040_45 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   }
 
   // relative luminance for RGB 0-255 (used for contrast)
@@ -107,9 +107,9 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
 
     // linear sRGB -> LMS (via matrix)
     // matrix from sRGB linear to LMS (as used by OKLab conversion)
-    const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
-    const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
-    const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
+    const l = 0.412_221_470_8 * r + 0.536_332_536_3 * g + 0.051_445_992_9 * b;
+    const m = 0.211_903_498_2 * r + 0.680_699_545_1 * g + 0.107_396_956_6 * b;
+    const s = 0.088_302_461_9 * r + 0.281_718_837_6 * g + 0.629_978_700_5 * b;
 
     // Non-linear transform (cube root)
     const l_ = Math.cbrt(l);
@@ -117,9 +117,9 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
     const s_ = Math.cbrt(s);
 
     // LMS -> OKLab
-    const L = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_;
-    const A = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_;
-    const B = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_;
+    const L = 0.210_454_255_3 * l_ + 0.793_617_785 * m_ - 0.004_072_046_8 * s_;
+    const A = 1.977_998_495_1 * l_ - 2.428_592_205 * m_ + 0.450_593_709_9 * s_;
+    const B = 0.025_904_037_1 * l_ + 0.782_771_766_2 * m_ - 0.808_675_766 * s_;
 
     // OKLab -> OKLCH
     const C = Math.sqrt(A * A + B * B);
@@ -144,13 +144,13 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
 
 // Generate a 6-digit PIN
 export function generatePIN(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100_000 + Math.random() * 900_000).toString();
 }
 
 // Generate a simple calendar ID (8 characters, alphanumeric)
 export function generateCalendarId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "";
   for (let i = 0; i < 8; i++) {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -162,27 +162,27 @@ export function generateCalendarName(): string {
   const now = new Date();
 
   const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
 
   const day = now.getDate();
   const month = months[now.getMonth()];
   const year = now.getFullYear();
 
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const seconds = now.getSeconds().toString().padStart(2, '0');
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const seconds = now.getSeconds().toString().padStart(2, "0");
 
   return `${day} ${month} ${year} - ${hours}:${minutes}:${seconds}`;
 }
@@ -201,7 +201,7 @@ export async function verifyPIN(pin: string, hash: string): Promise<boolean> {
 // Parse error to get a user-friendly message
 export const parseError = (error: unknown): string => {
   if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
+  if (typeof error === "string") return error;
 
-  return 'An unknown error occurred';
+  return "An unknown error occurred";
 };
