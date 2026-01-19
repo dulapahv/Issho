@@ -122,8 +122,7 @@ export default function CalendarPage() {
     const initCalendar = async () => {
       try {
         // Check for stored PIN
-        const storedPin =
-          localStorage.getItem(`calendar-${calendarId}`) || pin;
+        const storedPin = localStorage.getItem(`calendar-${calendarId}`) || pin;
 
         if (!storedPin) {
           // No stored PIN, show PIN dialog immediately without loading screen
@@ -421,8 +420,7 @@ export default function CalendarPage() {
       }}
     >
       <div
-        className="animate-fade-in flex min-h-screen flex-col gap-3 p-4
-          sm:gap-4"
+        className="animate-fade-in flex h-screen flex-col gap-3 p-4 sm:gap-4"
         ref={bodyRef}
       >
         <FloatingControls

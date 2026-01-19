@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
         // const verification = await checkBotId({
         //   developmentOptions: IS_DEV_ENV ? { bypass: 'HUMAN' } : undefined,
         // });
-
         // if (verification.isBot) {
         //   return NextResponse.json(
         //     { error: ERROR_MESSAGES.AUTH.UNAUTHORIZED },
