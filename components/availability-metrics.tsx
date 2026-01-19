@@ -149,7 +149,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       maxParticipationDates.length > 0 ? maxParticipationDates[0] : null;
     const latestDate =
       maxParticipationDates.length > 0
-        ? maxParticipationDates[maxParticipationDates.length - 1]
+        ? (maxParticipationDates.at(-1) ?? null)
         : null;
 
     // Convert consecutive dates with max participation to ranges
@@ -188,7 +188,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       maxParticipationRanges.length > 0 ? maxParticipationRanges[0] : null;
     const latestRange =
       maxParticipationRanges.length > 0
-        ? maxParticipationRanges[maxParticipationRanges.length - 1]
+        ? (maxParticipationRanges.at(-1) ?? null)
         : null;
 
     // Find dates where everyone is available
@@ -387,17 +387,18 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     ) {
       const windowDates = (currentWindow as WindowTracker).dates;
       const windowParticipants = (currentWindow as WindowTracker).participants;
-      meetingWindows.push({
-        range: {
-          start: windowDates[0],
-          end: new Date(
-            windowDates[windowDates.length - 1].getTime() + 24 * 60 * 60 * 1000
-          ),
-        },
-        participants: Array.from(windowParticipants),
-        count: windowParticipants.size,
-        daysCount: windowDates.length,
-      });
+      const lastWindowDate = windowDates.at(-1);
+      if (lastWindowDate) {
+        meetingWindows.push({
+          range: {
+            start: windowDates[0],
+            end: new Date(lastWindowDate.getTime() + 24 * 60 * 60 * 1000),
+          },
+          participants: Array.from(windowParticipants),
+          count: windowParticipants.size,
+          daysCount: windowDates.length,
+        });
+      }
     }
 
     // Sort by participant count, then by duration
@@ -589,7 +590,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
   };
 
   const participantColorMap = new Map<string, string>();
-  events.forEach((event) => participantColorMap.set(event.title, event.color));
+  for (const event of events) {
+    participantColorMap.set(event.title, event.color);
+  }
 
   return (
     <div className="space-y-4 overflow-y-auto">
