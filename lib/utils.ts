@@ -90,12 +90,16 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
   for (let iter = 0; iter < 100; iter++) {
     const [r, g, b] = hslToRgb(hue, sat, light);
     const contrast = contrastWithWhite(r, g, b);
-    if (contrast >= minContrast) break;
+    if (contrast >= minContrast) {
+      break;
+    }
     // Lower lightness more aggressively for lighter starts
     // step size depends on how far we are from target; larger reductions early
     const step = contrast < minContrast * 0.7 ? 3 : 1;
     light = Math.max(minLightness, light - step);
-    if (light === minLightness) break;
+    if (light === minLightness) {
+      break;
+    }
   }
 
   // Convert final RGB (0-255) -> OKLab -> OKLCH
@@ -124,7 +128,9 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
     // OKLab -> OKLCH
     const C = Math.sqrt(A * A + B * B);
     let hDeg = (Math.atan2(B, A) * 180) / Math.PI;
-    if (hDeg < 0) hDeg += 360;
+    if (hDeg < 0) {
+      hDeg += 360;
+    }
 
     return { L, C, h: hDeg };
   }
@@ -200,8 +206,12 @@ export async function verifyPIN(pin: string, hash: string): Promise<boolean> {
 
 // Parse error to get a user-friendly message
 export const parseError = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
 
   return "An unknown error occurred";
 };

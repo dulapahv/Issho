@@ -48,7 +48,9 @@ export function MarkAvailabilityDialog({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!selectedSlot || isCreating) return;
+    if (!selectedSlot || isCreating) {
+      return;
+    }
 
     const formData = new FormData(event.currentTarget);
     const userName = (formData.get("userName") as string).trim();
@@ -80,14 +82,20 @@ export function MarkAvailabilityDialog({
   // Custom validation function for name
   const validateName = (value: string) => {
     const trimmed = value.trim();
-    if (!trimmed) return true; // Return true to show error
-    if (trimmed.length < 1) return true;
+    if (!trimmed) {
+      return true; // Return true to show error
+    }
+    if (trimmed.length < 1) {
+      return true;
+    }
     return false; // Return false when valid
   };
 
   // Format the selected dates for display
   const formatDateRange = () => {
-    if (!selectedSlot) return "";
+    if (!selectedSlot) {
+      return "";
+    }
 
     const start = selectedSlot.start;
     const end = new Date(selectedSlot.end.getTime() - 24 * 60 * 60 * 1000);

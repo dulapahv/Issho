@@ -104,11 +104,11 @@ export async function GET(request: NextRequest) {
 
     // Log calendars being deleted (useful for debugging)
     if (IS_DEV_ENV) {
-      calendarsToDelete.forEach((cal) => {
+      for (const cal of calendarsToDelete) {
         console.log(
           `[Cron] Deleting calendar: ${cal.id} - "${cal.name}" (${cal._count.events} events, last updated: ${cal.updatedAt.toISOString()})`
         );
-      });
+      }
     }
 
     // Delete calendars in batches

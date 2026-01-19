@@ -54,7 +54,9 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
 
   const handleSelectSlot = useCallback(
     async (slotInfo: SlotInfo) => {
-      if (isProcessingRef.current) return;
+      if (isProcessingRef.current) {
+        return;
+      }
 
       if (isDrawMode) {
         // Mark Available mode only
@@ -94,15 +96,9 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
     if (!selectedSlot) {
       throw new Error("No slot selected");
     }
-
-    try {
-      await onCreateEvent(userName, selectedSlot.start, selectedSlot.end);
-      // Clear selection on success
-      setSelectedSlot(null);
-    } catch (error) {
-      // Re-throw to let the dialog handle the error
-      throw error;
-    }
+    await onCreateEvent(userName, selectedSlot.start, selectedSlot.end);
+    // Clear selection on success
+    setSelectedSlot(null);
   };
 
   const handleDialogOpenChange = (open: boolean) => {

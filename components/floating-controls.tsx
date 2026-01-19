@@ -101,8 +101,12 @@ export function FloatingControls({
                   disabled={isSavingName}
                   onChange={(e) => setTempName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isSavingName) handleNameSubmit();
-                    if (e.key === "Escape" && !isSavingName) handleNameCancel();
+                    if (e.key === "Enter" && !isSavingName) {
+                      handleNameSubmit();
+                    }
+                    if (e.key === "Escape" && !isSavingName) {
+                      handleNameCancel();
+                    }
                   }}
                   value={tempName}
                 />
@@ -155,7 +159,9 @@ export function FloatingControls({
               <ToggleGroup
                 className="order-1 flex sm:order-2"
                 onValueChange={(value) => {
-                  if (value) setDrawMode(value === "draw");
+                  if (value) {
+                    setDrawMode(value === "draw");
+                  }
                 }}
                 type="single"
                 value={isDrawMode ? "draw" : "delete"}
@@ -225,7 +231,9 @@ export function FloatingControls({
                 disabled={isSavingName}
                 onChange={(e) => setTempName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isSavingName) handleNameSubmit();
+                  if (e.key === "Enter" && !isSavingName) {
+                    handleNameSubmit();
+                  }
                 }}
                 placeholder="Calendar name"
                 value={tempName}

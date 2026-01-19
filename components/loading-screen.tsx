@@ -85,7 +85,7 @@ export function LoadingScreen({
               : "pending",
       }))
     );
-  }, [currentStep]);
+  }, [currentStep, steps.findIndex, steps.length]);
 
   const getStepIcon = (step: LoadingStep) => {
     if (step.status === "complete") {

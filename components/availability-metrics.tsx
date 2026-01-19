@@ -102,17 +102,17 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
 
     // Group events by participant
     const participantEvents = new Map<string, CalendarEvent[]>();
-    events.forEach((event) => {
+    for (const event of events) {
       if (!participantEvents.has(event.title)) {
         participantEvents.set(event.title, []);
       }
-      participantEvents.get(event.title)!.push(event);
-    });
+      participantEvents.get(event.title)?.push(event);
+    }
 
     // Find all dates and create daily availability map
     const dailyAvailability = new Map<string, Set<string>>(); // date string to set of available participants
 
-    events.forEach((event) => {
+    for (const event of events) {
       const start = new Date(event.start);
       const end = new Date(event.end);
 
@@ -121,36 +121,34 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         if (!dailyAvailability.has(dateStr)) {
           dailyAvailability.set(dateStr, new Set());
         }
-        dailyAvailability.get(dateStr)!.add(event.title);
+        dailyAvailability.get(dateStr)?.add(event.title);
       }
-    });
+    }
 
     // Find the maximum number of participants available on any day
     let maxParticipantCount = 0;
-    dailyAvailability.forEach((participantSet) => {
+    for (const participantSet of dailyAvailability.values()) {
       if (participantSet.size > maxParticipantCount) {
         maxParticipantCount = participantSet.size;
       }
-    });
+    }
 
     // Find all dates with maximum participation
     const maxParticipationDates: Date[] = [];
     const allDates = Array.from(dailyAvailability.keys()).sort();
 
-    allDates.forEach((dateStr) => {
-      const availableSet = dailyAvailability.get(dateStr)!;
-      if (availableSet.size === maxParticipantCount) {
+    for (const dateStr of allDates) {
+      const availableSet = dailyAvailability.get(dateStr);
+      if (availableSet && availableSet.size === maxParticipantCount) {
         maxParticipationDates.push(new Date(dateStr));
       }
-    });
+    }
 
     // Calculate earliest and latest dates based on maximum participation
     const earliestDate =
       maxParticipationDates.length > 0 ? maxParticipationDates[0] : null;
     const latestDate =
-      maxParticipationDates.length > 0
-        ? maxParticipationDates[maxParticipationDates.length - 1]
-        : null;
+      maxParticipationDates.length > 0 ? maxParticipationDates.at(-1) : null;
 
     // Convert consecutive dates with max participation to ranges
     const maxParticipationRanges: DateRange[] = [];
@@ -187,19 +185,17 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     const earliestRange =
       maxParticipationRanges.length > 0 ? maxParticipationRanges[0] : null;
     const latestRange =
-      maxParticipationRanges.length > 0
-        ? maxParticipationRanges[maxParticipationRanges.length - 1]
-        : null;
+      maxParticipationRanges.length > 0 ? maxParticipationRanges.at(-1) : null;
 
     // Find dates where everyone is available
     const everyoneAvailableDates: Date[] = [];
 
-    allDates.forEach((dateStr) => {
-      const availableSet = dailyAvailability.get(dateStr)!;
-      if (availableSet.size === totalParticipants) {
+    for (const dateStr of allDates) {
+      const availableSet = dailyAvailability.get(dateStr);
+      if (availableSet && availableSet.size === totalParticipants) {
         everyoneAvailableDates.push(new Date(dateStr));
       }
-    });
+    }
 
     // Convert consecutive dates to ranges (for everyone available)
     const commonRanges: DateRange[] = [];
@@ -254,15 +250,17 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     let overallEarliestDate: Date | null = null;
     let overallLatestDate: Date | null = null;
 
-    events.forEach((event) => {
+    for (const event of events) {
       const start = new Date(event.start);
       const end = new Date(event.end);
 
-      if (!overallEarliestDate || start < overallEarliestDate)
+      if (!overallEarliestDate || start < overallEarliestDate) {
         overallEarliestDate = start;
-      if (!overallLatestDate || end > overallLatestDate)
+      }
+      if (!overallLatestDate || end > overallLatestDate) {
         overallLatestDate = end;
-    });
+      }
+    }
 
     const totalDaysWithCoverage = dailyAvailability.size;
     const totalCalendarDays =
@@ -279,9 +277,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         : 0;
 
     let totalParticipantDays = 0;
-    dailyAvailability.forEach((participantSet) => {
+    for (const participantSet of dailyAvailability.values()) {
       totalParticipantDays += participantSet.size;
-    });
+    }
     const averageParticipantsPerDay =
       totalDaysWithCoverage > 0
         ? totalParticipantDays / totalDaysWithCoverage
@@ -293,7 +291,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       const participantDates = new Set<string>();
       const ranges: DateRange[] = [];
 
-      events.forEach((event) => {
+      for (const event of events) {
         ranges.push({
           start: new Date(event.start),
           end: new Date(event.end),
@@ -304,7 +302,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
           participantDates.add(format(d, "yyyy-MM-dd"));
         }
-      });
+      }
 
       const totalDays = participantDates.size;
       const percentage =
@@ -322,22 +320,28 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
 
     participantMetrics.sort((a, b) => b.totalDays - a.totalDays);
     const mostAvailable = participantMetrics[0] || null;
-    const leastAvailable =
-      participantMetrics[participantMetrics.length - 1] || null;
+    const leastAvailable = participantMetrics.at(-1) || null;
 
     // Find top meeting windows (by participant count)
     const meetingWindows: MeetingWindow[] = [];
     const processedRanges = new Set<string>();
 
     // Type for tracking current window
-    type WindowTracker = { dates: Date[]; participants: Set<string> };
+    interface WindowTracker {
+      dates: Date[];
+      participants: Set<string>;
+    }
 
     // Group consecutive dates by participant count
     let currentWindow: WindowTracker | null = null;
 
-    allDates.forEach((dateStr) => {
+    for (const dateStr of allDates) {
       const date = new Date(dateStr);
-      const availableSet = dailyAvailability.get(dateStr)!;
+      const availableSet = dailyAvailability.get(dateStr);
+
+      if (!availableSet) {
+        continue;
+      }
 
       if (
         currentWindow !== null &&
@@ -347,23 +351,23 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         currentWindow.dates.push(date);
       } else {
         if (currentWindow !== null && currentWindow.dates.length > 0) {
-          const rangeKey = `${format(currentWindow.dates[0], "yyyy-MM-dd")}-${format(currentWindow.dates[currentWindow.dates.length - 1], "yyyy-MM-dd")}`;
-          if (!processedRanges.has(rangeKey)) {
-            processedRanges.add(rangeKey);
-            const windowDates = currentWindow.dates;
-            const windowParticipants = currentWindow.participants;
-            meetingWindows.push({
-              range: {
-                start: windowDates[0],
-                end: new Date(
-                  windowDates[windowDates.length - 1].getTime() +
-                    24 * 60 * 60 * 1000
-                ),
-              },
-              participants: Array.from(windowParticipants),
-              count: windowParticipants.size,
-              daysCount: windowDates.length,
-            });
+          const lastDate = currentWindow.dates.at(-1);
+          if (lastDate) {
+            const rangeKey = `${format(currentWindow.dates[0], "yyyy-MM-dd")}-${format(lastDate, "yyyy-MM-dd")}`;
+            if (!processedRanges.has(rangeKey)) {
+              processedRanges.add(rangeKey);
+              const windowDates = currentWindow.dates;
+              const windowParticipants = currentWindow.participants;
+              meetingWindows.push({
+                range: {
+                  start: windowDates[0],
+                  end: new Date(lastDate.getTime() + 24 * 60 * 60 * 1000),
+                },
+                participants: Array.from(windowParticipants),
+                count: windowParticipants.size,
+                daysCount: windowDates.length,
+              });
+            }
           }
         }
         currentWindow = {
@@ -371,7 +375,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           participants: new Set(availableSet),
         };
       }
-    });
+    }
 
     if (
       currentWindow !== null &&
@@ -382,9 +386,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       meetingWindows.push({
         range: {
           start: windowDates[0],
-          end: new Date(
-            windowDates[windowDates.length - 1].getTime() + 24 * 60 * 60 * 1000
-          ),
+          end: new Date(windowDates.at(-1).getTime() + 24 * 60 * 60 * 1000),
         },
         participants: Array.from(windowParticipants),
         count: windowParticipants.size,
@@ -394,7 +396,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
 
     // Sort by participant count, then by duration
     meetingWindows.sort((a, b) => {
-      if (b.count !== a.count) return b.count - a.count;
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
       return b.daysCount - a.daysCount;
     });
 
@@ -417,10 +421,10 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
 
     // Optimal meeting length (most common range duration)
     const rangeDurations = new Map<number, number>();
-    meetingWindows.forEach((window) => {
+    for (const window of meetingWindows) {
       const days = window.daysCount;
       rangeDurations.set(days, (rangeDurations.get(days) || 0) + 1);
-    });
+    }
 
     let optimalMeetingLength = 1;
     let maxFrequency = 0;
@@ -441,11 +445,11 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         const p2 = participantArray[j];
         let overlapDays = 0;
 
-        dailyAvailability.forEach((availableSet) => {
+        for (const availableSet of dailyAvailability.values()) {
           if (availableSet.has(p1) && availableSet.has(p2)) {
             overlapDays++;
           }
-        });
+        }
 
         if (overlapDays > 0) {
           const percentage =
