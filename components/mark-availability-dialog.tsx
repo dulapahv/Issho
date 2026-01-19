@@ -158,7 +158,7 @@ export function MarkAvailabilityDialog({
             disabled={isCreating}
             autoFocus
             autoComplete="off"
-            className="data-[invalid]:border-destructive"
+            className="data-invalid:border-destructive"
           />
         </Form.Control>
       </Form.Field>

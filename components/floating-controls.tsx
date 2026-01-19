@@ -96,7 +96,7 @@ export function FloatingControls({
                   {calendarName}
                 </span>
                 <PencilSimpleIcon
-                  className="text-muted-foreground size-5 flex-shrink-0"
+                  className="text-muted-foreground size-5 shrink-0"
                 />
               </Button>
             ) : /* Desktop/Tablet: Inline editing */
@@ -109,7 +109,7 @@ export function FloatingControls({
                     if (e.key === 'Enter' && !isSavingName) handleNameSubmit();
                     if (e.key === 'Escape' && !isSavingName) handleNameCancel();
                   }}
-                  className="data-[invalid]:border-destructive h-8"
+                  className="data-invalid:border-destructive h-8"
                   disabled={isSavingName}
                   autoFocus
                 />
@@ -147,7 +147,7 @@ export function FloatingControls({
                   {calendarName}
                 </span>
                 <PencilSimpleIcon
-                  className="text-muted-foreground size-5 flex-shrink-0"
+                  className="text-muted-foreground size-5 shrink-0"
                 />
               </Button>
             )}
@@ -245,7 +245,7 @@ export function FloatingControls({
                 placeholder="Calendar name"
                 disabled={isSavingName}
                 autoFocus
-                className="data-[invalid]:border-destructive"
+                className="data-invalid:border-destructive"
               />
             </div>
             <DrawerFooter>

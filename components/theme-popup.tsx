@@ -66,7 +66,7 @@ export function ThemePopup() {
               variant="ghost"
               className={cn(
                 'justify-start rounded-sm',
-                theme === option.value && '!bg-accent',
+                theme === option.value && 'bg-accent!',
               )}
             >
               <option.icon className="size-5" />

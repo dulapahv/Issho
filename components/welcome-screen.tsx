@@ -130,7 +130,7 @@ export function WelcomeScreen() {
           <div className="mb-8 lg:mb-12">
             <div className="mb-6">
               <h1
-                className="from-primary to-primary/60 bg-gradient-to-r
+                className="from-primary to-primary/60 bg-linear-to-r
                   bg-clip-text text-4xl font-bold text-transparent lg:text-5xl"
               >
                 Issho
@@ -224,7 +224,7 @@ export function WelcomeScreen() {
                 </div>
                 <Form.Control asChild>
                   <Input
-                    className="data-[invalid]:border-destructive mt-2 font-mono
+                    className="data-invalid:border-destructive mt-2 font-mono
                       tracking-widest"
                     type="text"
                     placeholder="Enter calendar ID"
@@ -264,7 +264,7 @@ export function WelcomeScreen() {
                 </div>
                 <Form.Control asChild>
                   <Input
-                    className="data-[invalid]:border-destructive mt-2 font-mono
+                    className="data-invalid:border-destructive mt-2 font-mono
                       tracking-[0.5em]"
                     type="text"
                     inputMode="numeric"
@@ -320,7 +320,7 @@ export function WelcomeScreen() {
         {/* Gradient overlay for smooth transition */}
         <div
           className="from-background absolute inset-y-0 left-0 z-10 w-32
-            bg-gradient-to-r to-transparent"
+            bg-linear-to-r to-transparent"
         />
 
         {/* Image container with overflow */}
@@ -337,7 +337,7 @@ export function WelcomeScreen() {
 
           <div
             className="from-primary/5 to-primary/10 absolute inset-0
-              bg-gradient-to-br via-transparent"
+              bg-linear-to-br via-transparent"
           />
         </div>
       </div>

@@ -435,7 +435,7 @@ export default function CalendarPage() {
             lg:flex-row"
         >
           {/* Metrics panel - always visible */}
-          <div className="order-2 flex-shrink-0 lg:order-1 lg:w-80 xl:w-96">
+          <div className="order-2 shrink-0 lg:order-1 lg:w-80 xl:w-96">
             <div className="h-full overflow-y-auto">
               <AvailabilityMetrics events={events} />
             </div>

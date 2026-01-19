@@ -253,7 +253,7 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
   // Desktop/Tablet: Use Dialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-6 sm:max-w-[500px]">
+      <DialogContent className="gap-6 sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Share Calendar</DialogTitle>
           <DialogDescription>

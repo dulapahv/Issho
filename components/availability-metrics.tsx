@@ -630,7 +630,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 dark:bg-yellow-950/30"
             >
               <WarningOctagonIcon
-                className="size-5 flex-shrink-0 text-yellow-500"
+                className="size-5 shrink-0 text-yellow-500"
               />
               <p
                 className="text-sm font-medium text-yellow-900
@@ -723,7 +723,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             Best Meeting Windows
           </CardTitle>
         </CardHeader>
-        <CardContent className="max-h-[320px] space-y-3 overflow-y-auto">
+        <CardContent className="max-h-80 space-y-3 overflow-y-auto">
           {metrics.topMeetingWindows.slice(0, 5).map((window, index) => (
             <div key={index} className="space-y-2 rounded-lg border p-3">
               <div className="flex items-start justify-between">
@@ -768,7 +768,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             Individual Availability
           </CardTitle>
         </CardHeader>
-        <CardContent className="max-h-[265px] space-y-4 overflow-y-auto">
+        <CardContent className="max-h-66.25 space-y-4 overflow-y-auto">
           {metrics.participantMetrics.map((participant) => (
             <div key={participant.name} className="space-y-2">
               <div className="flex items-center justify-between">

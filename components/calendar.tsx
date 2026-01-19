@@ -219,7 +219,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
             components={components}
             popup
             className={cn(
-              'h-full min-h-[640px]',
+              'h-full min-h-160',
               isDrawMode
                 ? '[&>div]:last:cursor-crosshair'
                 : '[&>div]:last:cursor-not-allowed',

@@ -111,7 +111,7 @@ export function PinEntryDialog({
               required
               disabled={isLoading}
               autoFocus
-              className="data-[invalid]:border-destructive font-mono
+              className="data-invalid:border-destructive font-mono
                 tracking-[0.5em]"
               onChange={(e) => {
                 // Only allow digits
@@ -219,7 +219,7 @@ export function PinEntryDialog({
   // Desktop/Tablet: Use AlertDialog
   return (
     <AlertDialog open={open}>
-      <AlertDialogContent className="sm:max-w-[425px]">
+      <AlertDialogContent className="sm:max-w-106.25">
         <AlertDialogHeader>
           <AlertDialogTitle>Enter Calendar PIN</AlertDialogTitle>
           <AlertDialogDescription>
