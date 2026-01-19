@@ -884,7 +884,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             Pairwise Overlap
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="max-h-53 space-y-3 overflow-y-auto">
           <p className="text-muted-foreground text-sm">
             {metrics.pairwiseOverlaps.length > 0 ? (
               <>How often pairs of participants are available together</>
@@ -894,7 +894,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
               <>No overlapping availability found between participants.</>
             )}
           </p>
-          {metrics.pairwiseOverlaps.slice(0, 5).map((overlap, index) => (
+          {metrics.pairwiseOverlaps.map((overlap, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center">
                 <div
