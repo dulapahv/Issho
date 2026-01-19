@@ -449,16 +449,18 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           }
         });
 
-        const percentage =
-          totalDaysWithCoverage > 0
-            ? (overlapDays / totalDaysWithCoverage) * 100
-            : 0;
+        if (overlapDays > 0) {
+          const percentage =
+            totalDaysWithCoverage > 0
+              ? (overlapDays / totalDaysWithCoverage) * 100
+              : 0;
 
-        pairwiseOverlaps.push({
-          pair: [p1, p2],
-          overlapDays,
-          percentage,
-        });
+          pairwiseOverlaps.push({
+            pair: [p1, p2],
+            overlapDays,
+            percentage,
+          });
+        }
       }
     }
 
@@ -886,8 +888,10 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           <p className="text-muted-foreground text-sm">
             {metrics.pairwiseOverlaps.length > 0 ? (
               <>How often pairs of participants are available together</>
-            ) : (
+            ) : metrics.totalParticipants < 2 ? (
               <>Add more participants to see pairwise overlap.</>
+            ) : (
+              <>No overlapping availability found between participants.</>
             )}
           </p>
           {metrics.pairwiseOverlaps.slice(0, 5).map((overlap, index) => (
