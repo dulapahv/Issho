@@ -418,7 +418,7 @@ export default function CalendarPage() {
       }}
     >
       <div
-        className="flex h-screen animate-fade-in flex-col gap-3 p-4 sm:gap-4"
+        className="flex animate-fade-in flex-col gap-3 p-4 sm:gap-4 lg:h-screen"
         ref={bodyRef}
       >
         <FloatingControls
