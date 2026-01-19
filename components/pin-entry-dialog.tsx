@@ -1,6 +1,7 @@
 "use client";
 
 import { SignInIcon } from "@phosphor-icons/react";
+// biome-ignore lint/performance/noNamespaceImport: Radix UI Form uses namespace pattern
 import * as Form from "@radix-ui/react-form";
 import { useState } from "react";
 import { isMobile } from "react-device-detect";

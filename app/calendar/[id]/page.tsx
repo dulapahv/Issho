@@ -70,7 +70,7 @@ export default function CalendarPage() {
       setCalendarName(data.name);
 
       // Convert dates and set events
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: API response type is dynamic
       const formattedEvents: CalendarEvent[] = data.events.map((e: any) => ({
         ...e,
         start: new Date(e.start),
@@ -111,11 +111,16 @@ export default function CalendarPage() {
   };
 
   // Initialize calendar and set up real-time subscription
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pin should not trigger re-initialization when rotated
   useEffect(() => {
-    if (!calendarId) return;
+    if (!calendarId) {
+      return;
+    }
 
     // If a PIN exists in search params, store it
-    if (pin) localStorage.setItem(`calendar-${calendarId}`, pin);
+    if (pin) {
+      localStorage.setItem(`calendar-${calendarId}`, pin);
+    }
 
     const initCalendar = async () => {
       try {
@@ -155,7 +160,7 @@ export default function CalendarPage() {
         setCalendarName(data.name);
 
         // Convert dates and set events
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: API response type is dynamic
         const formattedEvents: CalendarEvent[] = data.events.map((e: any) => ({
           ...e,
           start: new Date(e.start),
@@ -186,11 +191,20 @@ export default function CalendarPage() {
       setIsOpen(true);
       localStorage.setItem("tour-completed", "false");
     }
-  }, [calendarId, setCalendarId, setCalendarName, setEvents]);
+  }, [
+    calendarId,
+    setCalendarId,
+    setCalendarName,
+    setEvents,
+    router,
+    setIsOpen,
+  ]);
 
   // Set up Supabase realtime subscription after successful auth
   useEffect(() => {
-    if (!(calendarId && pin)) return;
+    if (!(calendarId && pin)) {
+      return;
+    }
 
     const supabase = createClient();
     const channel = supabase.channel(`calendar-${calendarId}`);
@@ -211,7 +225,7 @@ export default function CalendarPage() {
         // Handle event modifications
         if (payload.events) {
           const formattedEvents: CalendarEvent[] = payload.events.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // biome-ignore lint/suspicious/noExplicitAny: Realtime payload type is dynamic
             (e: any) => ({
               ...e,
               start: new Date(e.start),
@@ -363,12 +377,14 @@ export default function CalendarPage() {
   return (
     <TourProvider
       afterOpen={() => {
-        if (!isMobile && bodyRef.current)
+        if (!isMobile && bodyRef.current) {
           disableBodyScroll(bodyRef.current as Element);
+        }
       }}
       beforeClose={() => {
-        if (!isMobile && bodyRef.current)
+        if (!isMobile && bodyRef.current) {
           enableBodyScroll(bodyRef.current as Element);
+        }
         localStorage.setItem("tour-completed", "true");
       }}
       defaultOpen={!isTourComplete}

@@ -53,7 +53,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
   const isProcessingRef = useRef(false);
 
   const handleSelectSlot = useCallback(
-    async (slotInfo: SlotInfo) => {
+    (slotInfo: SlotInfo) => {
       if (isProcessingRef.current) {
         return;
       }
@@ -155,7 +155,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
   // Calendar components customization
   const components = useMemo(
     () => ({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: react-big-calendar toolbar props type is complex
       toolbar: (props: any) => (
         <div className="mb-4 flex items-center gap-x-6">
           <ToggleGroup type="single" variant="outline">

@@ -7,11 +7,11 @@ import { useEffect } from "react";
 import { CONTACT_URL, IS_DEV_ENV, NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-export default function Error({
+export default function ErrorBoundary({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: globalThis.Error & { digest?: string };
   reset: () => void;
 }) {
   useEffect(() => {
@@ -62,6 +62,7 @@ Message: ${error.message}
               "transition-colors hover:bg-foreground/90"
             )}
             onClick={reset}
+            type="button"
           >
             Try again
           </button>

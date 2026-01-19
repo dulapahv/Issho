@@ -2,6 +2,7 @@
 
 import { CheckIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
+// biome-ignore lint/performance/noNamespaceImport: Radix UI Form uses namespace pattern
 import * as Form from "@radix-ui/react-form";
 import { useRef, useState } from "react";
 import type { SlotInfo } from "react-big-calendar";

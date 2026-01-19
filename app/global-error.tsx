@@ -70,6 +70,7 @@ Message: ${error.message}
                   "transition-colors hover:bg-foreground/90"
                 )}
                 onClick={reset}
+                type="button"
               >
                 Reload application
               </button>

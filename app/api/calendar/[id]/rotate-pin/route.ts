@@ -24,7 +24,7 @@ export async function POST(
     const normalizedId = id.toUpperCase();
 
     const authHeader = request.headers.get("authorization");
-    if (!(authHeader && authHeader.startsWith("Bearer "))) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
         { error: ERROR_MESSAGES.AUTH.MISSING_TOKEN },
         { status: HTTP_STATUS.UNAUTHORIZED }

@@ -11,7 +11,7 @@ async function verifyCalendarAccess(calendarId: string, request: NextRequest) {
   const normalizedCalendarId = calendarId.toUpperCase();
 
   const authHeader = request.headers.get("authorization");
-  if (!(authHeader && authHeader.startsWith("Bearer "))) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return {
       authorized: false,
       error: ERROR_MESSAGES.AUTH.MISSING_TOKEN,

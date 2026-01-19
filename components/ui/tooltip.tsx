@@ -1,5 +1,6 @@
 "use client";
 
+// biome-ignore lint/performance/noNamespaceImport: Radix UI namespace import is standard pattern
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type * as React from "react";
 

@@ -91,6 +91,7 @@ interface AvailabilityMetrics {
 }
 
 export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex metrics calculation with many interdependent parts
   const metrics = useMemo((): AvailabilityMetrics | null => {
     if (events.length === 0) {
       return null;
@@ -767,8 +768,11 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="max-h-80 space-y-3 overflow-y-auto">
-          {metrics.topMeetingWindows.slice(0, 5).map((window, index) => (
-            <div className="space-y-2 rounded-lg border p-3" key={index}>
+          {metrics.topMeetingWindows.slice(0, 5).map((window) => (
+            <div
+              className="space-y-2 rounded-lg border p-3"
+              key={`${window.range}-${window.count}`}
+            >
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <p className="font-medium text-sm">
@@ -923,16 +927,23 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         </CardHeader>
         <CardContent className="max-h-53 space-y-3 overflow-y-auto">
           <p className="text-muted-foreground text-sm">
-            {metrics.pairwiseOverlaps.length > 0 ? (
+            {metrics.pairwiseOverlaps.length > 0 && (
               <>How often pairs of participants are available together</>
-            ) : metrics.totalParticipants < 2 ? (
-              <>Add more participants to see pairwise overlap.</>
-            ) : (
-              <>No overlapping availability found between participants.</>
             )}
+            {metrics.pairwiseOverlaps.length === 0 &&
+              metrics.totalParticipants < 2 && (
+                <>Add more participants to see pairwise overlap.</>
+              )}
+            {metrics.pairwiseOverlaps.length === 0 &&
+              metrics.totalParticipants >= 2 && (
+                <>No overlapping availability found between participants.</>
+              )}
           </p>
-          {metrics.pairwiseOverlaps.map((overlap, index) => (
-            <div className="flex items-center justify-between" key={index}>
+          {metrics.pairwiseOverlaps.map((overlap) => (
+            <div
+              className="flex items-center justify-between"
+              key={`${overlap.pair[0]}-${overlap.pair[1]}`}
+            >
               <div className="flex items-center">
                 <div
                   className="mr-1.5 h-6 w-1 rounded-full"

@@ -42,13 +42,9 @@ export function ThemePopup() {
     <Popover onOpenChange={setIsOpen} open={isOpen}>
       <PopoverTrigger asChild>
         <Button size="icon" variant="outline">
-          {theme === "dark" ? (
-            <MoonIcon className="size-5" />
-          ) : theme === "light" ? (
-            <SunIcon className="size-5" />
-          ) : (
-            <MonitorIcon className="size-5" />
-          )}
+          {theme === "dark" && <MoonIcon className="size-5" />}
+          {theme === "light" && <SunIcon className="size-5" />}
+          {theme === "system" && <MonitorIcon className="size-5" />}
           <span className="sr-only">Toggle theme</span>
         </Button>
       </PopoverTrigger>

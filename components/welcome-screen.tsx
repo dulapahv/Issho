@@ -6,6 +6,7 @@ import {
   SparkleIcon,
   UserPlusIcon,
 } from "@phosphor-icons/react";
+// biome-ignore lint/performance/noNamespaceImport: Radix UI Form uses namespace pattern
 import * as Form from "@radix-ui/react-form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

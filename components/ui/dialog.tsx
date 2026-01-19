@@ -1,6 +1,7 @@
 "use client";
 
 import { XIcon } from "@phosphor-icons/react";
+// biome-ignore lint/performance/noNamespaceImport: Radix UI namespace import is standard pattern
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import type * as React from "react";
 

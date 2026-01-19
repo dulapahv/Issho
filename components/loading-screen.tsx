@@ -80,7 +80,8 @@ export function LoadingScreen({
         status:
           index < stepIndex
             ? "complete"
-            : index === stepIndex
+            : // biome-ignore lint/style/noNestedTernary: Step status logic is clearer as ternary
+              index === stepIndex
               ? "loading"
               : "pending",
       }))

@@ -92,7 +92,7 @@ export function FloatingControls({
                 </span>
                 <PencilSimpleIcon className="size-5 shrink-0 text-muted-foreground" />
               </Button>
-            ) : /* Desktop/Tablet: Inline editing */
+            ) : // biome-ignore lint/style/noNestedTernary: Mobile/Desktop conditional rendering pattern
             isEditingName ? (
               <div className="flex max-w-sm items-center gap-x-2">
                 <Input

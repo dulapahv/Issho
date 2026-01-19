@@ -1,5 +1,6 @@
 "use client";
 
+// biome-ignore lint/performance/noNamespaceImport: Radix UI namespace import is standard pattern
 import * as LabelPrimitive from "@radix-ui/react-label";
 import type * as React from "react";
 

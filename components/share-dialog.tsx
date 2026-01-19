@@ -104,8 +104,8 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
     }
   };
 
-  // Shared content component
-  const ShareContent = () => (
+  // Shared content JSX
+  const shareContent = (
     <div className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor="share-url">Invite URL</Label>
@@ -210,9 +210,7 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
               calendar.
             </DrawerDescription>
           </DrawerHeader>
-          <div className="px-4 pb-4">
-            <ShareContent />
-          </div>
+          <div className="px-4 pb-4">{shareContent}</div>
           <DrawerFooter>
             <Button
               className="w-full"
@@ -259,7 +257,7 @@ Click the Invite URL or enter Calendar ID and PIN to join!`;
             calendar.
           </DialogDescription>
         </DialogHeader>
-        <ShareContent />
+        {shareContent}
         <div className="flex flex-col gap-2">
           <Button
             className="w-full"

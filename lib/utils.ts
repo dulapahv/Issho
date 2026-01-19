@@ -9,23 +9,28 @@ export function cn(...inputs: ClassValue[]) {
 // Generate a deterministic color from a string (name) and return as oklch(...)
 export function generateColorFromName(name: string, minContrast = 4.5): string {
   // Simple deterministic hash (32-bit safe)
+  // biome-ignore lint/suspicious/noBitwiseOperators: FNV hash requires bitwise operations
   let hash = 2_166_136_261 >>> 0; // FNV-ish seed
   for (let i = 0; i < name.length; i++) {
+    // biome-ignore lint/suspicious/noBitwiseOperators: FNV hash requires bitwise operations
     hash ^= name.charCodeAt(i);
+    // biome-ignore lint/suspicious/noBitwiseOperators: FNV hash requires bitwise operations
     hash = Math.imul(hash, 16_777_619) >>> 0;
   }
 
   // Use pieces of the hash to derive H,S,L
   const hue = hash % 360; // 0-359
+  // biome-ignore lint/suspicious/noBitwiseOperators: Hash bit extraction
   const sat = 45 + ((hash >>> 8) % 45); // 45-89% saturation (avoid too gray)
   // Start lightness in a mid-range biased by hash, then we'll adjust for contrast
+  // biome-ignore lint/suspicious/noBitwiseOperators: Hash bit extraction
   let light = 40 + ((hash >>> 16) % 30); // 40-69%
 
   // Helpers: HSL -> RGB (0-255)
   function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-    s /= 100;
-    l /= 100;
-    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const satNorm = s / 100;
+    const lightNorm = l / 100;
+    const c = (1 - Math.abs(2 * lightNorm - 1)) * satNorm;
     const hh = h / 60;
     const x = c * (1 - Math.abs((hh % 2) - 1));
     let r1 = 0,
@@ -56,7 +61,7 @@ export function generateColorFromName(name: string, minContrast = 4.5): string {
       g1 = 0;
       b1 = x;
     }
-    const m = l - c / 2;
+    const m = lightNorm - c / 2;
     return [
       Math.round((r1 + m) * 255),
       Math.round((g1 + m) * 255),
@@ -201,7 +206,7 @@ export async function hashPINForDB(pin: string): Promise<string> {
 
 // Verify PIN against hash
 export async function verifyPIN(pin: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(pin, hash);
+  return await bcrypt.compare(pin, hash);
 }
 
 // Parse error to get a user-friendly message
