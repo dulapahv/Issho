@@ -148,7 +148,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     const earliestDate =
       maxParticipationDates.length > 0 ? maxParticipationDates[0] : null;
     const latestDate =
-      maxParticipationDates.length > 0 ? maxParticipationDates.at(-1) : null;
+      maxParticipationDates.length > 0
+        ? maxParticipationDates[maxParticipationDates.length - 1]
+        : null;
 
     // Convert consecutive dates with max participation to ranges
     const maxParticipationRanges: DateRange[] = [];
@@ -185,7 +187,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     const earliestRange =
       maxParticipationRanges.length > 0 ? maxParticipationRanges[0] : null;
     const latestRange =
-      maxParticipationRanges.length > 0 ? maxParticipationRanges.at(-1) : null;
+      maxParticipationRanges.length > 0
+        ? maxParticipationRanges[maxParticipationRanges.length - 1]
+        : null;
 
     // Find dates where everyone is available
     const everyoneAvailableDates: Date[] = [];
@@ -386,7 +390,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       meetingWindows.push({
         range: {
           start: windowDates[0],
-          end: new Date(windowDates.at(-1).getTime() + 24 * 60 * 60 * 1000),
+          end: new Date(
+            windowDates[windowDates.length - 1].getTime() + 24 * 60 * 60 * 1000
+          ),
         },
         participants: Array.from(windowParticipants),
         count: windowParticipants.size,
