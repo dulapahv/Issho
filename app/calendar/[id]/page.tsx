@@ -65,7 +65,7 @@ export default function CalendarPage() {
       const data = await response.json();
 
       // Only store the PIN
-      sessionStorage.setItem(`calendar-${calendarId}-pin`, enteredPin);
+      localStorage.setItem(`calendar-${calendarId}-pin`, enteredPin);
       setPin(enteredPin);
 
       setCalendarId(data.id);
@@ -101,14 +101,14 @@ export default function CalendarPage() {
 
   const handlePinRotated = (newPin: string) => {
     setPin(newPin);
-    sessionStorage.setItem(`calendar-${calendarId}-pin`, newPin);
+    localStorage.setItem(`calendar-${calendarId}-pin`, newPin);
   };
 
   const handleRetry = () => {
     // Clear error and stored PIN, then show PIN dialog
     setLoadingError('');
     setIsLoading(false);
-    sessionStorage.removeItem(`calendar-${calendarId}-pin`);
+    localStorage.removeItem(`calendar-${calendarId}-pin`);
     setShowPinDialog(true);
   };
 
@@ -117,13 +117,13 @@ export default function CalendarPage() {
     if (!calendarId) return;
 
     // If a PIN exists in search params, store it
-    if (pin) sessionStorage.setItem(`calendar-${calendarId}-pin`, pin);
+    if (pin) localStorage.setItem(`calendar-${calendarId}-pin`, pin);
 
     const initCalendar = async () => {
       try {
         // Check for stored PIN
         const storedPin =
-          sessionStorage.getItem(`calendar-${calendarId}-pin`) || pin;
+          localStorage.getItem(`calendar-${calendarId}-pin`) || pin;
 
         if (!storedPin) {
           // No stored PIN, show PIN dialog immediately without loading screen
@@ -145,7 +145,7 @@ export default function CalendarPage() {
 
         if (!response.ok) {
           // Invalid stored PIN
-          sessionStorage.removeItem(`calendar-${calendarId}-pin`);
+          localStorage.removeItem(`calendar-${calendarId}-pin`);
           setLoadingError('Session expired. Please enter the PIN again.');
           // Don't auto-hide, let user click retry
           return;

@@ -41,8 +41,8 @@ export function WelcomeScreen() {
 
       const data = await response.json();
 
-      // Store PIN in sessionStorage
-      sessionStorage.setItem(`calendar-${data.id}-pin`, data.pin);
+      // Store PIN in localStorage
+      localStorage.setItem(`calendar-${data.id}-pin`, data.pin);
 
       // Navigate to calendar
       router.push(`/calendar/${data.id}`);
@@ -70,8 +70,8 @@ export function WelcomeScreen() {
         return;
       }
 
-      // Store PIN in sessionStorage
-      sessionStorage.setItem(`calendar-${id}-pin`, pin);
+      // Store PIN in localStorage
+      localStorage.setItem(`calendar-${id}-pin`, pin);
 
       // Navigate to calendar
       router.push(`/calendar/${id}`);
