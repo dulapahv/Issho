@@ -116,7 +116,29 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       const start = new Date(event.start);
       const end = new Date(event.end);
 
-      for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+      // Normalize to local midnight to match calendar display
+      const startLocal = new Date(start);
+      startLocal.setHours(0, 0, 0, 0);
+
+      // For end date: if it has time > 0, include that day; otherwise treat as exclusive
+      const endLocal = new Date(end);
+      const hasEndTime =
+        end.getHours() > 0 ||
+        end.getMinutes() > 0 ||
+        end.getSeconds() > 0 ||
+        end.getMilliseconds() > 0;
+      endLocal.setHours(0, 0, 0, 0);
+      // If end has time component, that day should be included (add 1 day to make loop include it)
+      if (hasEndTime) {
+        endLocal.setDate(endLocal.getDate() + 1);
+      }
+
+      // Use < for exclusive end date
+      for (
+        let d = new Date(startLocal);
+        d < endLocal;
+        d.setDate(d.getDate() + 1)
+      ) {
         const dateStr = format(d, "yyyy-MM-dd");
         if (!dailyAvailability.has(dateStr)) {
           dailyAvailability.set(dateStr, new Set());
@@ -303,7 +325,29 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
 
         const start = new Date(event.start);
         const end = new Date(event.end);
-        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+
+        // Normalize to local midnight to match calendar display
+        const startLocal = new Date(start);
+        startLocal.setHours(0, 0, 0, 0);
+
+        // For end date: if it has time > 0, include that day; otherwise treat as exclusive
+        const endLocal = new Date(end);
+        const hasEndTime =
+          end.getHours() > 0 ||
+          end.getMinutes() > 0 ||
+          end.getSeconds() > 0 ||
+          end.getMilliseconds() > 0;
+        endLocal.setHours(0, 0, 0, 0);
+        if (hasEndTime) {
+          endLocal.setDate(endLocal.getDate() + 1);
+        }
+
+        // Use < for exclusive end date
+        for (
+          let d = new Date(startLocal);
+          d < endLocal;
+          d.setDate(d.getDate() + 1)
+        ) {
           participantDates.add(format(d, "yyyy-MM-dd"));
         }
       }
