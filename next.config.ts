@@ -2,6 +2,7 @@ import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactCompiler: true,
   poweredByHeader: false,
   typedRoutes: true,
   images: {
@@ -10,6 +11,7 @@ const nextConfig: NextConfig = {
   experimental: {
     typedEnv: true,
     viewTransition: true,
+    turbopackFileSystemCacheForDev: true,
     optimizePackageImports: ["@phosphor-icons/react"],
   },
   async redirects() {
