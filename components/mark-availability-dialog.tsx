@@ -4,7 +4,7 @@ import { CheckIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 // biome-ignore lint/performance/noNamespaceImport: Radix UI Form uses namespace pattern
 import * as Form from "@radix-ui/react-form";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SlotInfo } from "react-big-calendar";
 import { isMobile } from "react-device-detect";
 import { Spinner } from "@/components/spinner";
@@ -37,6 +37,91 @@ interface MarkAvailabilityDialogProps {
   onSubmit: (userName: string) => Promise<void>;
 }
 
+interface FormBodyProps {
+  formRef: React.RefObject<HTMLFormElement>;
+  inputRef: React.RefObject<HTMLInputElement>;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onClearServerErrors: () => void;
+  isTimeSlot: boolean;
+  dateRange: string;
+  serverError: string;
+  isCreating: boolean;
+  validateName: (value: string) => boolean;
+  footer: React.ReactNode;
+}
+
+/** Stable module-level component to prevent remounting on parent re-renders. */
+function FormBody({
+  formRef,
+  inputRef,
+  onSubmit,
+  onClearServerErrors,
+  isTimeSlot,
+  dateRange,
+  serverError,
+  isCreating,
+  validateName,
+  footer,
+}: FormBodyProps) {
+  return (
+    <Form.Root
+      className="space-y-4"
+      onClearServerErrors={onClearServerErrors}
+      onSubmit={onSubmit}
+      ref={formRef}
+    >
+      {/* Show selected date range */}
+      <div className="rounded-lg bg-muted p-3 text-sm">
+        <span className="text-muted-foreground">
+          {isTimeSlot ? "Selected time: " : "Selected dates: "}
+        </span>
+        <span className="font-medium">{dateRange}</span>
+      </div>
+
+      <Form.Field className="space-y-2" name="userName">
+        <div className="flex items-baseline justify-between">
+          <Form.Label className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Your Name
+          </Form.Label>
+          <Form.Message
+            className="text-[13px] text-destructive"
+            match="valueMissing"
+          >
+            Please enter your name
+          </Form.Message>
+          <Form.Message
+            className="text-[13px] text-destructive"
+            match={validateName}
+          >
+            Name cannot be empty
+          </Form.Message>
+        </div>
+        <Form.Control asChild>
+          <Input
+            ref={inputRef}
+            autoComplete="off"
+            className="data-invalid:border-destructive"
+            disabled={isCreating}
+            placeholder="Enter your name"
+            required
+            type="text"
+          />
+        </Form.Control>
+      </Form.Field>
+
+      {/* Server error message */}
+      {serverError && (
+        <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2">
+          <WarningCircleIcon className="size-5 text-destructive" />
+          <span className="text-destructive text-sm">{serverError}</span>
+        </div>
+      )}
+
+      {footer}
+    </Form.Root>
+  );
+}
+
 export function MarkAvailabilityDialog({
   open,
   onOpenChange,
@@ -46,7 +131,22 @@ export function MarkAvailabilityDialog({
   const [isCreating, setIsCreating] = useState(false);
   const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { timeFormat } = useSettingsStore();
+
+  /**
+   * Focus the input when the dialog opens so the user can type immediately.
+   * Using useEffect instead of autoFocus because autoFocus on an inline
+   * sub-component would fire on every remount, causing a keyboard flash on close.
+   */
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -98,29 +198,26 @@ export function MarkAvailabilityDialog({
    * Determines whether the selected slot spans specific times
    * (from week/day view) vs full days (from month view).
    */
-  const isTimeSlot = () => {
+  const isTimeSlot = (() => {
     if (!selectedSlot) {
       return false;
     }
     const { start, end } = selectedSlot;
     const diffMs = end.getTime() - start.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
-    // If the slot is less than 24 hours, it's a time-specific slot
-    // Also check if start has non-midnight time
     const hasStartTime = start.getHours() !== 0 || start.getMinutes() !== 0;
     return diffHours < 24 || hasStartTime;
-  };
+  })();
 
   /** Formats the selected slot for display, handling both date-only and time-specific selections. */
-  const formatDateRange = () => {
+  const dateRange = (() => {
     if (!selectedSlot) {
       return "";
     }
 
     const { start, end } = selectedSlot;
 
-    // Time-specific slot (from week/day view)
-    if (isTimeSlot()) {
+    if (isTimeSlot) {
       const timeOptions: Intl.DateTimeFormatOptions = {
         hour: timeFormat === "24h" ? "2-digit" : "numeric",
         minute: "2-digit",
@@ -158,7 +255,6 @@ export function MarkAvailabilityDialog({
     const startStr = start.toLocaleDateString(undefined, options);
     const endStr = adjustedEnd.toLocaleDateString(undefined, options);
 
-    // Calculate number of days (inclusive)
     const diffTime = adjustedEnd.getTime() - start.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayText = diffDays === 1 ? "day" : "days";
@@ -168,122 +264,16 @@ export function MarkAvailabilityDialog({
     }
 
     return `${startStr} - ${endStr} (${diffDays} ${dayText})`;
-  };
-
-  // Shared form content
-  const FormContent = () => (
-    <Form.Root
-      className="space-y-4"
-      onClearServerErrors={() => setServerError("")}
-      onSubmit={handleSubmit}
-      ref={formRef}
-    >
-      {/* Show selected date range */}
-      <div className="rounded-lg bg-muted p-3 text-sm">
-        <span className="text-muted-foreground">
-          {isTimeSlot() ? "Selected time: " : "Selected dates: "}
-        </span>
-        <span className="font-medium">{formatDateRange()}</span>
-      </div>
-
-      <Form.Field className="space-y-2" name="userName">
-        <div className="flex items-baseline justify-between">
-          <Form.Label className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Your Name
-          </Form.Label>
-          <Form.Message
-            className="text-[13px] text-destructive"
-            match="valueMissing"
-          >
-            Please enter your name
-          </Form.Message>
-          <Form.Message
-            className="text-[13px] text-destructive"
-            match={validateName}
-          >
-            Name cannot be empty
-          </Form.Message>
-        </div>
-        <Form.Control asChild>
-          <Input
-            autoComplete="off"
-            autoFocus
-            className="data-invalid:border-destructive"
-            disabled={isCreating}
-            placeholder="Enter your name"
-            required
-            type="text"
-          />
-        </Form.Control>
-      </Form.Field>
-
-      {/* Server error message */}
-      {serverError && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2">
-          <WarningCircleIcon className="size-5 text-destructive" />
-          <span className="text-destructive text-sm">{serverError}</span>
-        </div>
-      )}
-
-      {/* Desktop Footer */}
-      {!isMobile && (
-        <DialogFooter>
-          <Button
-            disabled={isCreating}
-            onClick={() => handleOpenChange(false)}
-            type="button"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-          <Form.Submit asChild>
-            <Button disabled={isCreating}>
-              {isCreating ? (
-                <Spinner size="sm" variant="secondary" />
-              ) : (
-                <CheckIcon className="size-5" />
-              )}
-              Mark Available
-            </Button>
-          </Form.Submit>
-        </DialogFooter>
-      )}
-
-      {/* Mobile Footer */}
-      {isMobile && (
-        <DrawerFooter className="px-0 pt-2">
-          <Form.Submit asChild>
-            <Button className="w-full" disabled={isCreating} size="lg">
-              {isCreating ? (
-                <Spinner size="sm" variant="secondary" />
-              ) : (
-                <CheckIcon className="size-5" />
-              )}
-              Mark Available
-            </Button>
-          </Form.Submit>
-          <DrawerClose asChild>
-            <Button
-              className="w-full"
-              disabled={isCreating}
-              onClick={() => handleOpenChange(false)}
-              size="lg"
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-          </DrawerClose>
-        </DrawerFooter>
-      )}
-    </Form.Root>
-  );
+  })();
 
   // Mobile: Use Drawer
   if (isMobile) {
     return (
       <Drawer onOpenChange={handleOpenChange} open={open}>
-        <DrawerContent>
+        <DrawerContent
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DrawerHeader>
             <DrawerTitle>Mark Availability</DrawerTitle>
             <DrawerDescription>
@@ -291,7 +281,43 @@ export function MarkAvailabilityDialog({
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-2">
-            <FormContent />
+            <FormBody
+              dateRange={dateRange}
+              footer={
+                <DrawerFooter className="px-0 pt-2">
+                  <Form.Submit asChild>
+                    <Button className="w-full" disabled={isCreating} size="lg">
+                      {isCreating ? (
+                        <Spinner size="sm" variant="secondary" />
+                      ) : (
+                        <CheckIcon className="size-5" />
+                      )}
+                      Mark Available
+                    </Button>
+                  </Form.Submit>
+                  <DrawerClose asChild>
+                    <Button
+                      className="w-full"
+                      disabled={isCreating}
+                      onClick={() => handleOpenChange(false)}
+                      size="lg"
+                      type="button"
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              }
+              formRef={formRef}
+              inputRef={inputRef}
+              isCreating={isCreating}
+              isTimeSlot={isTimeSlot}
+              onClearServerErrors={() => setServerError("")}
+              onSubmit={handleSubmit}
+              serverError={serverError}
+              validateName={validateName}
+            />
           </div>
         </DrawerContent>
       </Drawer>
@@ -308,7 +334,39 @@ export function MarkAvailabilityDialog({
             Enter your name to mark these dates as available.
           </DialogDescription>
         </DialogHeader>
-        <FormContent />
+        <FormBody
+          dateRange={dateRange}
+          footer={
+            <DialogFooter>
+              <Button
+                disabled={isCreating}
+                onClick={() => handleOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Form.Submit asChild>
+                <Button disabled={isCreating}>
+                  {isCreating ? (
+                    <Spinner size="sm" variant="secondary" />
+                  ) : (
+                    <CheckIcon className="size-5" />
+                  )}
+                  Mark Available
+                </Button>
+              </Form.Submit>
+            </DialogFooter>
+          }
+          formRef={formRef}
+          inputRef={inputRef}
+          isCreating={isCreating}
+          isTimeSlot={isTimeSlot}
+          onClearServerErrors={() => setServerError("")}
+          onSubmit={handleSubmit}
+          serverError={serverError}
+          validateName={validateName}
+        />
       </DialogContent>
     </Dialog>
   );
