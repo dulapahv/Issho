@@ -101,6 +101,17 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
         const e = localizer?.format(end, fmt, culture) ?? "";
         return `${s} - ${e}`;
       },
+      agendaHeaderFormat: (
+        { start, end }: { start: Date; end: Date },
+        culture?: string,
+        localizer?: {
+          format: (date: Date, fmt: string, culture?: string) => string;
+        }
+      ) => {
+        const s = localizer?.format(start, "MMM d, yyyy", culture) ?? "";
+        const e = localizer?.format(end, "MMM d, yyyy", culture) ?? "";
+        return `${s} – ${e}`;
+      },
     }),
     [timeFormat]
   );
