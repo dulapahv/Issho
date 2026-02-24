@@ -1,11 +1,17 @@
 "use client";
 
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { addDays } from "date-fns/addDays";
+import { addMonths } from "date-fns/addMonths";
+import { addWeeks } from "date-fns/addWeeks";
 import { format } from "date-fns/format";
 import { getDay } from "date-fns/getDay";
 import { enUS } from "date-fns/locale/en-US";
 import { parse } from "date-fns/parse";
 import { startOfWeek } from "date-fns/startOfWeek";
+import { subDays } from "date-fns/subDays";
+import { subMonths } from "date-fns/subMonths";
+import { subWeeks } from "date-fns/subWeeks";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Calendar as BigCalendar,
@@ -19,6 +25,7 @@ import { MarkAvailabilityDialog } from "@/components/mark-availability-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { type CalendarEvent, useCalendarStore } from "@/lib/calendar-store";
+import { useSettingsStore } from "@/lib/settings-store";
 import { cn, parseError } from "@/lib/utils";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -27,18 +34,6 @@ const locales = {
   "en-US": enUS,
 };
 
-const startOfWeekMonday = (date: Date) => {
-  return startOfWeek(date, { weekStartsOn: 1 }); // 1 = Monday
-};
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: startOfWeekMonday,
-  getDay,
-  locales,
-});
-
 interface CalendarProps {
   onCreateEvent: (title: string, start: Date, end: Date) => Promise<void>;
   onDeleteEvent: (eventId: string) => Promise<void>;
@@ -46,18 +41,72 @@ interface CalendarProps {
 
 export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
   const { events, isDrawMode } = useCalendarStore();
+  const { timeFormat, weekStartsOn } = useSettingsStore();
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<View>(Views.MONTH);
-  const isProcessingRef = useRef(false);
+  const [currentView, setCurrentView] = useState<View>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("calendar-view");
+      const validViews: string[] = [
+        Views.MONTH,
+        Views.WEEK,
+        Views.DAY,
+        Views.AGENDA,
+      ];
+      if (saved && validViews.includes(saved)) {
+        return saved as View;
+      }
+    }
+    return Views.MONTH;
+  });
+  const deletingEventIds = useRef(new Set<string>());
+
+  const localizer = useMemo(
+    () =>
+      dateFnsLocalizer({
+        format,
+        parse,
+        startOfWeek: (date: Date) => startOfWeek(date, { weekStartsOn }),
+        getDay,
+        locales,
+      }),
+    [weekStartsOn]
+  );
+
+  const calendarFormats = useMemo(
+    () => ({
+      timeGutterFormat: timeFormat === "24h" ? "HH:mm" : "h:mm a",
+      eventTimeRangeFormat: (
+        { start, end }: { start: Date; end: Date },
+        culture?: string,
+        localizer?: {
+          format: (date: Date, fmt: string, culture?: string) => string;
+        }
+      ) => {
+        const fmt = timeFormat === "24h" ? "HH:mm" : "h:mm a";
+        const s = localizer?.format(start, fmt, culture) ?? "";
+        const e = localizer?.format(end, fmt, culture) ?? "";
+        return `${s} - ${e}`;
+      },
+      selectRangeFormat: (
+        { start, end }: { start: Date; end: Date },
+        culture?: string,
+        localizer?: {
+          format: (date: Date, fmt: string, culture?: string) => string;
+        }
+      ) => {
+        const fmt = timeFormat === "24h" ? "HH:mm" : "h:mm a";
+        const s = localizer?.format(start, fmt, culture) ?? "";
+        const e = localizer?.format(end, fmt, culture) ?? "";
+        return `${s} - ${e}`;
+      },
+    }),
+    [timeFormat]
+  );
 
   const handleSelectSlot = useCallback(
     (slotInfo: SlotInfo) => {
-      if (isProcessingRef.current) {
-        return;
-      }
-
       if (isDrawMode) {
         // Mark Available mode only
         setSelectedSlot(slotInfo);
@@ -70,9 +119,9 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
 
   const handleSelectEvent = useCallback(
     async (event: CalendarEvent) => {
-      if (!(isDrawMode || isProcessingRef.current)) {
+      if (!isDrawMode && !deletingEventIds.current.has(event.id)) {
         // Delete mode - delete specific event when clicked
-        isProcessingRef.current = true;
+        deletingEventIds.current.add(event.id);
         const toastId = toast.loading("Removing availability...");
 
         try {
@@ -85,7 +134,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
             id: toastId,
           });
         } finally {
-          isProcessingRef.current = false;
+          deletingEventIds.current.delete(event.id);
         }
       }
     },
@@ -108,22 +157,31 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
     }
   };
 
-  // Navigation handlers
+  /** Returns the date offset by one step in the given direction for the current view. */
+  const getNavigatedDate = useCallback(
+    (direction: 1 | -1): Date => {
+      const navigators: Record<string, (date: Date, amount: number) => Date> = {
+        [Views.MONTH]: direction === 1 ? addMonths : subMonths,
+        [Views.WEEK]: direction === 1 ? addWeeks : subWeeks,
+        [Views.DAY]: direction === 1 ? addDays : subDays,
+        [Views.AGENDA]: direction === 1 ? addMonths : subMonths,
+      };
+      const navigate = navigators[currentView];
+      return navigate ? navigate(currentDate, 1) : currentDate;
+    },
+    [currentDate, currentView]
+  );
+
+  /** Handles calendar navigation (prev, next, today). */
   const handleNavigate = useCallback(
     (action: "PREV" | "NEXT" | "TODAY") => {
       if (action === "TODAY") {
         setCurrentDate(new Date());
-      } else if (action === "NEXT") {
-        const newDate = new Date(currentDate);
-        newDate.setMonth(newDate.getMonth() + 1);
-        setCurrentDate(newDate);
-      } else if (action === "PREV") {
-        const newDate = new Date(currentDate);
-        newDate.setMonth(newDate.getMonth() - 1);
-        setCurrentDate(newDate);
+        return;
       }
+      setCurrentDate(getNavigatedDate(action === "NEXT" ? 1 : -1));
     },
-    [currentDate]
+    [getNavigatedDate]
   );
 
   // Style events based on their color
@@ -152,12 +210,18 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
     []
   );
 
+  /** Switches to the specified calendar view and persists to localStorage. */
+  const handleViewChange = useCallback((view: View) => {
+    setCurrentView(view);
+    localStorage.setItem("calendar-view", view);
+  }, []);
+
   // Calendar components customization
   const components = useMemo(
     () => ({
       // biome-ignore lint/suspicious/noExplicitAny: react-big-calendar toolbar props type is complex
       toolbar: (props: any) => (
-        <div className="mb-4 flex items-center gap-x-6">
+        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2">
           <ToggleGroup type="single" variant="outline">
             <ToggleGroupItem
               className="gap-1"
@@ -183,10 +247,25 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
             </ToggleGroupItem>
           </ToggleGroup>
           <span className="rbc-toolbar-label">{props.label}</span>
+          <ToggleGroup
+            onValueChange={(value) => {
+              if (value) {
+                handleViewChange(value as View);
+              }
+            }}
+            type="single"
+            value={currentView}
+            variant="outline"
+          >
+            <ToggleGroupItem value={Views.MONTH}>Month</ToggleGroupItem>
+            <ToggleGroupItem value={Views.WEEK}>Week</ToggleGroupItem>
+            <ToggleGroupItem value={Views.DAY}>Day</ToggleGroupItem>
+            <ToggleGroupItem value={Views.AGENDA}>Agenda</ToggleGroupItem>
+          </ToggleGroup>
         </div>
       ),
     }),
-    [handleNavigate]
+    [handleNavigate, handleViewChange, currentView]
   );
 
   return (
@@ -206,18 +285,21 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
             endAccessor="end"
             eventPropGetter={eventStyleGetter}
             events={events}
+            formats={calendarFormats}
             localizer={localizer}
             onNavigate={setCurrentDate}
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
-            onView={setCurrentView}
+            onView={handleViewChange}
             popup
             scrollToTime={scrollToTime}
             selectable={isDrawMode}
             startAccessor="start"
+            step={15}
+            timeslots={4}
             titleAccessor="title"
             view={currentView}
-            views={[Views.MONTH]}
+            views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
           />
         </CardContent>
       </Card>

@@ -9,8 +9,8 @@ import {
 import { useState } from "react";
 import { isMobile } from "react-device-detect";
 import { HelpPopup } from "@/components/help-popup";
+import { SettingsDialog } from "@/components/settings-dialog";
 import { Spinner } from "@/components/spinner";
-import { ThemePopup } from "@/components/theme-popup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -207,7 +207,7 @@ export function FloatingControls({
                 </TooltipContent>
               </Tooltip>
 
-              <ThemePopup />
+              <SettingsDialog />
               <HelpPopup />
             </div>
           </div>

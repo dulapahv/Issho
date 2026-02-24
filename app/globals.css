@@ -227,6 +227,7 @@ input[type="number"]::-webkit-inner-spin-button {
 /* For Firefox */
 input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* React Big Calendar Enhanced Styles */
@@ -247,19 +248,19 @@ input[type="number"] {
 }
 
 .rbc-toolbar-label {
-  @apply order-2 text-base font-semibold sm:order-none sm:text-xl;
+  @apply order-2 text-base font-semibold sm:order-0 sm:text-xl;
 }
 
 .rbc-toolbar button {
-  @apply !border-0 !px-2 text-sm transition-colors sm:!px-3 sm:text-base;
+  @apply border-0! px-2! text-sm transition-colors sm:px-3! sm:text-base;
 }
 
 .rbc-btn-group {
-  @apply bg-secondary order-1 !rounded-full !p-0.5 shadow-sm sm:order-none sm:!p-1;
+  @apply bg-secondary order-1 rounded-full! p-0.5! shadow-sm sm:order-0 sm:p-1!;
 }
 
 .rbc-btn-group > button {
-  @apply hover:bg-accent !mx-px !rounded-full active:!shadow-none;
+  @apply hover:bg-accent mx-px! rounded-full! active:shadow-none!;
 }
 
 .rbc-btn-group > button:hover {
@@ -267,7 +268,7 @@ input[type="number"] {
 }
 
 .rbc-active {
-  @apply !bg-foreground !text-background !shadow-none;
+  @apply bg-foreground! text-background! shadow-none!;
 }
 
 .rbc-header {
@@ -300,15 +301,15 @@ input[type="number"] {
 }
 
 .rbc-off-range-bg {
-  @apply !bg-muted/50;
+  @apply bg-muted/50!;
 }
 
 .rbc-today {
-  @apply !bg-accent;
+  @apply bg-accent!;
 }
 
 .rbc-selected-cell {
-  @apply !bg-accent;
+  @apply bg-accent!;
 }
 
 .rbc-date-cell {
@@ -340,7 +341,7 @@ input[type="number"] {
 }
 
 .rbc-event {
-  @apply !rounded px-0.5 text-[10px] font-medium shadow-sm sm:px-1 sm:text-xs;
+  @apply rounded! px-0.5 text-[10px] font-medium shadow-sm sm:px-1 sm:text-xs;
 }
 
 .rbc-event-label {
@@ -357,11 +358,11 @@ input[type="number"] {
 
 /* Popup styles for "+X more" */
 .rbc-overlay {
-  @apply !border-border !bg-popover max-w-[90vw] rounded-lg border p-2 shadow-lg sm:max-w-none;
+  @apply border-border! bg-popover! max-w-[90vw] rounded-lg border p-2 shadow-lg sm:max-w-none;
 }
 
 .rbc-overlay-header {
-  @apply !border-border mb-2 border-b pb-2 text-sm font-semibold;
+  @apply border-border! mb-2 border-b pb-2 text-sm font-semibold;
 }
 
 .rbc-overlay .rbc-event {
@@ -374,7 +375,7 @@ input[type="number"] {
 }
 
 .rbc-month-row {
-  @apply min-h-[60px] sm:min-h-[80px];
+  @apply min-h-15 sm:min-h-20;
 }
 
 /* Dark mode specific styles */
@@ -392,4 +393,223 @@ input[type="number"] {
 
 .dark .rbc-month-row {
   @apply border-border/50;
+}
+
+/* Time View Styles (Week & Day views) */
+.rbc-time-view {
+  @apply border-border overflow-hidden rounded-lg border;
+}
+
+.rbc-time-header {
+  @apply border-border border-b;
+}
+
+.rbc-time-header-content {
+  @apply border-border border-l;
+}
+
+.rbc-time-header-gutter {
+  @apply bg-muted/50;
+  min-width: 78px !important;
+}
+
+.rbc-allday-cell {
+  @apply border-border border-b;
+}
+
+.rbc-time-content {
+  @apply border-border border-t-0;
+}
+
+.rbc-time-content > .rbc-time-gutter {
+  @apply bg-muted/50;
+  min-width: 78px !important;
+}
+
+.rbc-timeslot-group {
+  @apply border-border border-b;
+  min-height: 80px !important;
+}
+
+.rbc-time-slot {
+  @apply border-border text-muted-foreground text-xs;
+}
+
+.rbc-time-column {
+  @apply border-border;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  @apply border-border/50 border-t;
+}
+
+.rbc-day-slot .rbc-events-container {
+  @apply mr-2;
+}
+
+.rbc-day-slot .rbc-event {
+  @apply rounded! border-0 px-1 py-0 text-xs font-medium shadow-sm;
+  overflow: visible !important;
+}
+
+.rbc-day-slot .rbc-event-label {
+  display: block !important;
+  @apply text-[10px] leading-tight opacity-80;
+}
+
+.rbc-day-slot .rbc-event-content {
+  @apply truncate text-xs leading-tight h-fit!;
+}
+
+.rbc-current-time-indicator {
+  @apply bg-destructive! h-0.5;
+}
+
+.rbc-current-time-indicator::before {
+  content: "";
+  @apply bg-destructive absolute -left-1.5 -top-1.5 size-3 rounded-full;
+}
+
+/* Agenda View Styles */
+.rbc-agenda-view {
+  @apply border-border overflow-hidden rounded-lg border;
+}
+
+.rbc-agenda-view table {
+  @apply w-full border-collapse;
+}
+
+.rbc-agenda-view table thead > tr > th {
+  @apply bg-muted/50 px-3 py-2 text-left text-xs font-medium;
+  border-color: var(--border) !important;
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+}
+
+.rbc-agenda-view table thead > tr > th + th {
+  border-left-width: 1px !important;
+  border-left-style: solid !important;
+  border-left-color: var(--border) !important;
+}
+
+.rbc-agenda-table {
+  @apply w-full border-collapse;
+}
+
+.rbc-agenda-table tbody > tr > td {
+  @apply px-3 py-2 text-sm;
+  border-color: var(--border) !important;
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+}
+
+.rbc-agenda-table tbody > tr > td + td {
+  border-left-width: 1px !important;
+  border-left-style: solid !important;
+  border-left-color: var(--border) !important;
+}
+
+.rbc-agenda-date-cell {
+  @apply whitespace-nowrap font-medium;
+}
+
+.rbc-agenda-time-cell {
+  @apply whitespace-nowrap text-xs;
+  color: white !important;
+}
+
+.rbc-agenda-event-cell {
+  @apply cursor-pointer;
+}
+
+.rbc-agenda-empty {
+  @apply p-6 text-center text-muted-foreground text-sm;
+}
+
+/* Dark mode for time/agenda views */
+.dark .rbc-time-view {
+  @apply border-border/50;
+}
+
+.dark .rbc-time-header {
+  @apply border-border/50;
+}
+
+.rbc-time-header .rbc-overflowing {
+  @apply border-r-0!;
+}
+
+.dark .rbc-time-header-content {
+  @apply border-border/50;
+}
+
+.dark .rbc-time-header-gutter {
+  @apply bg-card;
+}
+
+.dark .rbc-time-content > .rbc-time-gutter {
+  @apply bg-card;
+}
+
+.dark .rbc-timeslot-group {
+  @apply border-border/50;
+}
+
+.dark .rbc-time-column {
+  @apply border-border/50;
+}
+
+.dark .rbc-day-slot .rbc-time-slot {
+  @apply border-border/30;
+}
+
+.dark .rbc-agenda-view {
+  @apply border-border/50;
+}
+
+.dark .rbc-agenda-view table thead > tr > th {
+  @apply border-border/50 bg-card;
+}
+
+.dark .rbc-agenda-table tbody > tr > td {
+  @apply border-border/50;
+}
+
+.dark .rbc-agenda-table tbody > tr > td + td {
+  @apply border-border/50;
+}
+
+.rbc-agenda-view table,
+.rbc-agenda-table {
+  border-spacing: 0;
+}
+
+.rbc-agenda-table tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+@media (max-width: 640px) {
+  .rbc-day-slot .rbc-event-label {
+    display: none !important;
+  }
+
+  .rbc-day-slot .rbc-event-content {
+    font-size: 9px;
+  }
+
+  .rbc-time-header-gutter {
+    min-width: 50px !important;
+  }
+
+  .rbc-time-content > .rbc-time-gutter {
+    min-width: 50px !important;
+  }
+
+  .rbc-time-slot .rbc-label {
+    font-size: 9px;
+  }
+
+  .rbc-time-gutter .rbc-timeslot-group {
+    font-size: 9px;
+  }
 }

@@ -27,6 +27,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
+import { useSettingsStore } from "@/lib/settings-store";
 import { parseError } from "@/lib/utils";
 
 interface MarkAvailabilityDialogProps {
@@ -45,6 +46,7 @@ export function MarkAvailabilityDialog({
   const [isCreating, setIsCreating] = useState(false);
   const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const { timeFormat } = useSettingsStore();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -92,30 +94,76 @@ export function MarkAvailabilityDialog({
     return false; // Return false when valid
   };
 
-  // Format the selected dates for display
+  /**
+   * Determines whether the selected slot spans specific times
+   * (from week/day view) vs full days (from month view).
+   */
+  const isTimeSlot = () => {
+    if (!selectedSlot) {
+      return false;
+    }
+    const { start, end } = selectedSlot;
+    const diffMs = end.getTime() - start.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    // If the slot is less than 24 hours, it's a time-specific slot
+    // Also check if start has non-midnight time
+    const hasStartTime = start.getHours() !== 0 || start.getMinutes() !== 0;
+    return diffHours < 24 || hasStartTime;
+  };
+
+  /** Formats the selected slot for display, handling both date-only and time-specific selections. */
   const formatDateRange = () => {
     if (!selectedSlot) {
       return "";
     }
 
-    const start = selectedSlot.start;
-    const end = new Date(selectedSlot.end.getTime() - 24 * 60 * 60 * 1000);
+    const { start, end } = selectedSlot;
+
+    // Time-specific slot (from week/day view)
+    if (isTimeSlot()) {
+      const timeOptions: Intl.DateTimeFormatOptions = {
+        hour: timeFormat === "24h" ? "2-digit" : "numeric",
+        minute: "2-digit",
+        hour12: timeFormat === "12h",
+      };
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        month: "short",
+        day: "numeric",
+        year: start.getFullYear() !== end.getFullYear() ? "numeric" : undefined,
+      };
+
+      const startDateStr = start.toLocaleDateString(undefined, dateOptions);
+      const startTimeStr = start.toLocaleTimeString(undefined, timeOptions);
+      const endTimeStr = end.toLocaleTimeString(undefined, timeOptions);
+
+      if (start.toDateString() === end.toDateString()) {
+        return `${startDateStr}, ${startTimeStr} - ${endTimeStr}`;
+      }
+
+      const endDateStr = end.toLocaleDateString(undefined, dateOptions);
+      return `${startDateStr} ${startTimeStr} - ${endDateStr} ${endTimeStr}`;
+    }
+
+    // Full-day slot (from month view) - original behavior
+    const adjustedEnd = new Date(end.getTime() - 24 * 60 * 60 * 1000);
     const options: Intl.DateTimeFormatOptions = {
       month: "short",
       day: "numeric",
-      year: start.getFullYear() !== end.getFullYear() ? "numeric" : undefined,
+      year:
+        start.getFullYear() !== adjustedEnd.getFullYear()
+          ? "numeric"
+          : undefined,
     };
 
     const startStr = start.toLocaleDateString(undefined, options);
-    const endStr = end.toLocaleDateString(undefined, options);
+    const endStr = adjustedEnd.toLocaleDateString(undefined, options);
 
     // Calculate number of days (inclusive)
-    const diffTime = end.getTime() - start.getTime();
+    const diffTime = adjustedEnd.getTime() - start.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayText = diffDays === 1 ? "day" : "days";
 
-    // If same day, just show one date
-    if (start.toDateString() === end.toDateString()) {
+    if (start.toDateString() === adjustedEnd.toDateString()) {
       return `${startStr} (1 day)`;
     }
 
@@ -132,7 +180,9 @@ export function MarkAvailabilityDialog({
     >
       {/* Show selected date range */}
       <div className="rounded-lg bg-muted p-3 text-sm">
-        <span className="text-muted-foreground">Selected dates: </span>
+        <span className="text-muted-foreground">
+          {isTimeSlot() ? "Selected time: " : "Selected dates: "}
+        </span>
         <span className="font-medium">{formatDateRange()}</span>
       </div>
 

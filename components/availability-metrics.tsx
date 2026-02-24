@@ -9,6 +9,7 @@ import {
   MagnifyingGlassIcon,
   PulseIcon,
   SealCheckIcon,
+  SunIcon,
   TrendDownIcon,
   TrendUpIcon,
   UserCheckIcon,
@@ -22,6 +23,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import type { CalendarEvent } from "@/lib/calendar-store";
+import { useSettingsStore } from "@/lib/settings-store";
+
+const SLOT_MINUTES = 15;
 
 interface AvailabilityMetricsProps {
   events: CalendarEvent[];
@@ -36,70 +40,163 @@ interface MeetingWindow {
   range: DateRange;
   participants: string[];
   count: number;
-  daysCount: number;
+  durationMinutes: number;
 }
 
 interface ParticipantMetrics {
   name: string;
-  totalDays: number;
+  totalMinutes: number;
   percentage: number;
   ranges: DateRange[];
 }
 
 interface PairwiseOverlap {
   pair: [string, string];
-  overlapDays: number;
+  overlapMinutes: number;
   percentage: number;
 }
 
+interface DayOfWeekMetric {
+  day: string;
+  slots: number;
+  avgParticipants: number;
+}
+
+interface PeakHourMetric {
+  hour: number;
+  label: string;
+  avgParticipants: number;
+  totalSlots: number;
+}
+
 interface AvailabilityMetrics {
-  // Basic metrics
   totalParticipants: number;
   everyoneAvailable: boolean;
+  hasTimeEvents: boolean;
 
-  // Date range metrics (based on maximum participation)
   earliestDate: Date | null;
   latestDate: Date | null;
   earliestRange: DateRange | null;
   latestRange: DateRange | null;
 
-  // Common availability
   commonRanges: DateRange[];
   longest: DateRange | null;
-  longestDurationDays: number;
+  longestDurationMinutes: number;
 
-  // Overall coverage
-  totalDaysWithCoverage: number;
-  totalCalendarDays: number;
+  totalSlotsWithCoverage: number;
+  totalCalendarSlots: number;
   coveragePercentage: number;
-  averageParticipantsPerDay: number;
+  averageParticipantsPerSlot: number;
 
-  // Individual insights
   participantMetrics: ParticipantMetrics[];
   mostAvailable: ParticipantMetrics | null;
   leastAvailable: ParticipantMetrics | null;
 
-  // Best meeting windows
   topMeetingWindows: MeetingWindow[];
-  weekendAvailability: number;
-  weekdayAvailability: number;
-  optimalMeetingLength: number;
+  weekendSlots: number;
+  weekdaySlots: number;
+  optimalMeetingMinutes: number;
 
-  // Overlap analysis
   pairwiseOverlaps: PairwiseOverlap[];
-  heatmapData: Map<string, number>; // date string to participant count
+  heatmapData: Map<string, number>;
+
+  bestDayOfWeek: DayOfWeekMetric | null;
+  dayOfWeekBreakdown: DayOfWeekMetric[];
+  peakHours: PeakHourMetric[];
 }
 
+/**
+ * Generates 15-minute slot keys between start and end times.
+ * Each key is formatted as "YYYY-MM-DDTHH:mm".
+ */
+function generateSlotKeys(start: Date, end: Date): string[] {
+  const keys: string[] = [];
+  const current = new Date(start);
+  current.setSeconds(0, 0);
+  // Round down to nearest 15-minute boundary
+  current.setMinutes(
+    Math.floor(current.getMinutes() / SLOT_MINUTES) * SLOT_MINUTES
+  );
+
+  const endTime = end.getTime();
+  while (current.getTime() < endTime) {
+    keys.push(format(current, "yyyy-MM-dd'T'HH:mm"));
+    current.setMinutes(current.getMinutes() + SLOT_MINUTES);
+  }
+  return keys;
+}
+
+/** Parses a slot key back to a Date object. */
+function parseSlotKey(key: string): Date {
+  const [datePart, timePart] = key.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hours, minutes] = timePart.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+}
+
+/**
+ * Formats a duration in minutes as a human-readable string.
+ * Returns "X days" for full-day multiples, "X hrs Y min" for sub-day durations.
+ */
+function formatDuration(minutes: number): string {
+  if (minutes <= 0) {
+    return "0 min";
+  }
+  const days = Math.floor(minutes / (24 * 60));
+  const remainingHours = Math.floor((minutes % (24 * 60)) / 60);
+  const remainingMinutes = minutes % 60;
+
+  // Exact day multiples
+  if (remainingHours === 0 && remainingMinutes === 0 && days > 0) {
+    return `${days} day${days !== 1 ? "s" : ""}`;
+  }
+
+  const parts: string[] = [];
+  if (days > 0) {
+    parts.push(`${days}d`);
+  }
+  if (remainingHours > 0) {
+    parts.push(`${remainingHours} hr${remainingHours !== 1 ? "s" : ""}`);
+  }
+  if (remainingMinutes > 0) {
+    parts.push(`${remainingMinutes} min`);
+  }
+  return parts.join(" ");
+}
+
+/**
+ * Detects whether an event spans full days (all-day event) vs. having specific times.
+ * An all-day event has start at midnight and end at midnight of a later day.
+ */
+function isAllDayEvent(event: CalendarEvent): boolean {
+  const start = new Date(event.start);
+  const end = new Date(event.end);
+  return (
+    start.getHours() === 0 &&
+    start.getMinutes() === 0 &&
+    start.getSeconds() === 0 &&
+    end.getHours() === 0 &&
+    end.getMinutes() === 0 &&
+    end.getSeconds() === 0 &&
+    end.getTime() > start.getTime()
+  );
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex metrics component with interdependent computation and conditional rendering
 export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
+  const { timeFormat } = useSettingsStore();
+  const timeFmt = timeFormat === "24h" ? "HH:mm" : "h:mm a";
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex metrics calculation with many interdependent parts
   const metrics = useMemo((): AvailabilityMetrics | null => {
     if (events.length === 0) {
       return null;
     }
 
-    // Get unique participants
     const participants = new Set(events.map((e) => e.title));
     const totalParticipants = participants.size;
+
+    // Detect if any events have specific times (non-all-day)
+    const hasTimeEvents = events.some((e) => !isAllDayEvent(e));
 
     // Group events by participant
     const participantEvents = new Map<string, CalendarEvent[]>();
@@ -110,103 +207,52 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       participantEvents.get(event.title)?.push(event);
     }
 
-    // Find all dates and create daily availability map
-    const dailyAvailability = new Map<string, Set<string>>(); // date string to set of available participants
+    // Build slot availability map: slotKey -> Set<participant>
+    const slotAvailability = new Map<string, Set<string>>();
 
     for (const event of events) {
       const start = new Date(event.start);
       const end = new Date(event.end);
 
-      // Normalize to local midnight to match calendar display
-      const startLocal = new Date(start);
-      startLocal.setHours(0, 0, 0, 0);
-
-      // For end date: if it has time > 0, include that day; otherwise treat as exclusive
-      const endLocal = new Date(end);
-      const hasEndTime =
-        end.getHours() > 0 ||
-        end.getMinutes() > 0 ||
-        end.getSeconds() > 0 ||
-        end.getMilliseconds() > 0;
-      endLocal.setHours(0, 0, 0, 0);
-      // If end has time component, that day should be included (add 1 day to make loop include it)
-      if (hasEndTime) {
-        endLocal.setDate(endLocal.getDate() + 1);
-      }
-
-      // Use < for exclusive end date
-      for (
-        let d = new Date(startLocal);
-        d < endLocal;
-        d.setDate(d.getDate() + 1)
-      ) {
-        const dateStr = format(d, "yyyy-MM-dd");
-        if (!dailyAvailability.has(dateStr)) {
-          dailyAvailability.set(dateStr, new Set());
+      // For all-day events, generate slots covering the full day(s)
+      const slotKeys = generateSlotKeys(start, end);
+      for (const key of slotKeys) {
+        if (!slotAvailability.has(key)) {
+          slotAvailability.set(key, new Set());
         }
-        dailyAvailability.get(dateStr)?.add(event.title);
+        slotAvailability.get(key)?.add(event.title);
       }
     }
 
-    // Find the maximum number of participants available on any day
+    // Find max participant count across all slots
     let maxParticipantCount = 0;
-    for (const participantSet of dailyAvailability.values()) {
+    for (const participantSet of slotAvailability.values()) {
       if (participantSet.size > maxParticipantCount) {
         maxParticipantCount = participantSet.size;
       }
     }
 
-    // Find all dates with maximum participation
-    const maxParticipationDates: Date[] = [];
-    const allDates = Array.from(dailyAvailability.keys()).sort();
+    // Find all slot keys with maximum participation
+    const allSlotKeys = Array.from(slotAvailability.keys()).sort();
+    const maxParticipationKeys: string[] = [];
 
-    for (const dateStr of allDates) {
-      const availableSet = dailyAvailability.get(dateStr);
+    for (const key of allSlotKeys) {
+      const availableSet = slotAvailability.get(key);
       if (availableSet && availableSet.size === maxParticipantCount) {
-        maxParticipationDates.push(new Date(dateStr));
+        maxParticipationKeys.push(key);
       }
     }
 
-    // Calculate earliest and latest dates based on maximum participation
+    // Earliest/latest dates based on max participation
     const earliestDate =
-      maxParticipationDates.length > 0 ? maxParticipationDates[0] : null;
-    const latestDate =
-      maxParticipationDates.length > 0
-        ? (maxParticipationDates.at(-1) ?? null)
+      maxParticipationKeys.length > 0
+        ? parseSlotKey(maxParticipationKeys[0])
         : null;
+    const lastMaxKey = maxParticipationKeys.at(-1);
+    const latestDate = lastMaxKey ? parseSlotKey(lastMaxKey) : null;
 
-    // Convert consecutive dates with max participation to ranges
-    const maxParticipationRanges: DateRange[] = [];
-    if (maxParticipationDates.length > 0) {
-      let rangeStart = maxParticipationDates[0];
-      let rangeEnd = maxParticipationDates[0];
-
-      for (let i = 1; i < maxParticipationDates.length; i++) {
-        const currentDate = maxParticipationDates[i];
-        const prevDate = maxParticipationDates[i - 1];
-
-        if (
-          currentDate.getTime() - prevDate.getTime() ===
-          24 * 60 * 60 * 1000
-        ) {
-          rangeEnd = currentDate;
-        } else {
-          maxParticipationRanges.push({
-            start: new Date(rangeStart),
-            end: new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000),
-          });
-          rangeStart = currentDate;
-          rangeEnd = currentDate;
-        }
-      }
-
-      maxParticipationRanges.push({
-        start: new Date(rangeStart),
-        end: new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000),
-      });
-    }
-
-    // Calculate earliest and latest ranges based on maximum participation
+    // Convert consecutive max-participation slots to ranges
+    const maxParticipationRanges = groupConsecutiveSlots(maxParticipationKeys);
     const earliestRange =
       maxParticipationRanges.length > 0 ? maxParticipationRanges[0] : null;
     const latestRange =
@@ -214,46 +260,16 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
         ? (maxParticipationRanges.at(-1) ?? null)
         : null;
 
-    // Find dates where everyone is available
-    const everyoneAvailableDates: Date[] = [];
-
-    for (const dateStr of allDates) {
-      const availableSet = dailyAvailability.get(dateStr);
+    // Find slots where everyone is available
+    const everyoneAvailableKeys: string[] = [];
+    for (const key of allSlotKeys) {
+      const availableSet = slotAvailability.get(key);
       if (availableSet && availableSet.size === totalParticipants) {
-        everyoneAvailableDates.push(new Date(dateStr));
+        everyoneAvailableKeys.push(key);
       }
     }
 
-    // Convert consecutive dates to ranges (for everyone available)
-    const commonRanges: DateRange[] = [];
-    if (everyoneAvailableDates.length > 0) {
-      let rangeStart = everyoneAvailableDates[0];
-      let rangeEnd = everyoneAvailableDates[0];
-
-      for (let i = 1; i < everyoneAvailableDates.length; i++) {
-        const currentDate = everyoneAvailableDates[i];
-        const prevDate = everyoneAvailableDates[i - 1];
-
-        if (
-          currentDate.getTime() - prevDate.getTime() ===
-          24 * 60 * 60 * 1000
-        ) {
-          rangeEnd = currentDate;
-        } else {
-          commonRanges.push({
-            start: new Date(rangeStart),
-            end: new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000),
-          });
-          rangeStart = currentDate;
-          rangeEnd = currentDate;
-        }
-      }
-
-      commonRanges.push({
-        start: new Date(rangeStart),
-        end: new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000),
-      });
-    }
+    const commonRanges = groupConsecutiveSlots(everyoneAvailableKeys);
 
     // Find longest common range
     const longest =
@@ -266,21 +282,18 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           })
         : null;
 
-    const longestDurationDays = longest
-      ? Math.ceil(
-          (longest.end.getTime() - longest.start.getTime()) /
-            (1000 * 60 * 60 * 24)
+    const longestDurationMinutes = longest
+      ? Math.round(
+          (longest.end.getTime() - longest.start.getTime()) / (1000 * 60)
         )
       : 0;
 
-    // Overall coverage metrics - calculate the overall calendar span
+    // Overall coverage metrics
     let overallEarliestDate: Date | null = null;
     let overallLatestDate: Date | null = null;
-
     for (const event of events) {
       const start = new Date(event.start);
       const end = new Date(event.end);
-
       if (!overallEarliestDate || start < overallEarliestDate) {
         overallEarliestDate = start;
       }
@@ -289,161 +302,94 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       }
     }
 
-    const totalDaysWithCoverage = dailyAvailability.size;
-    const totalCalendarDays =
+    const totalSlotsWithCoverage = slotAvailability.size;
+    const totalCalendarSlots =
       overallEarliestDate && overallLatestDate
         ? Math.ceil(
-            ((overallLatestDate as Date).getTime() -
-              (overallEarliestDate as Date).getTime()) /
-              (1000 * 60 * 60 * 24)
+            (overallLatestDate.getTime() - overallEarliestDate.getTime()) /
+              (1000 * 60 * SLOT_MINUTES)
           )
         : 0;
     const coveragePercentage =
-      totalCalendarDays > 0
-        ? (totalDaysWithCoverage / totalCalendarDays) * 100
+      totalCalendarSlots > 0
+        ? (totalSlotsWithCoverage / totalCalendarSlots) * 100
         : 0;
 
-    let totalParticipantDays = 0;
-    for (const participantSet of dailyAvailability.values()) {
-      totalParticipantDays += participantSet.size;
+    let totalParticipantSlots = 0;
+    for (const participantSet of slotAvailability.values()) {
+      totalParticipantSlots += participantSet.size;
     }
-    const averageParticipantsPerDay =
-      totalDaysWithCoverage > 0
-        ? totalParticipantDays / totalDaysWithCoverage
+    const averageParticipantsPerSlot =
+      totalSlotsWithCoverage > 0
+        ? totalParticipantSlots / totalSlotsWithCoverage
         : 0;
 
     // Individual participant metrics
     const participantMetrics: ParticipantMetrics[] = [];
-    participantEvents.forEach((events, name) => {
-      const participantDates = new Set<string>();
+    for (const [name, pEvents] of participantEvents) {
+      const participantSlots = new Set<string>();
       const ranges: DateRange[] = [];
 
-      for (const event of events) {
-        ranges.push({
-          start: new Date(event.start),
-          end: new Date(event.end),
-        });
-
-        const start = new Date(event.start);
-        const end = new Date(event.end);
-
-        // Normalize to local midnight to match calendar display
-        const startLocal = new Date(start);
-        startLocal.setHours(0, 0, 0, 0);
-
-        // For end date: if it has time > 0, include that day; otherwise treat as exclusive
-        const endLocal = new Date(end);
-        const hasEndTime =
-          end.getHours() > 0 ||
-          end.getMinutes() > 0 ||
-          end.getSeconds() > 0 ||
-          end.getMilliseconds() > 0;
-        endLocal.setHours(0, 0, 0, 0);
-        if (hasEndTime) {
-          endLocal.setDate(endLocal.getDate() + 1);
-        }
-
-        // Use < for exclusive end date
-        for (
-          let d = new Date(startLocal);
-          d < endLocal;
-          d.setDate(d.getDate() + 1)
-        ) {
-          participantDates.add(format(d, "yyyy-MM-dd"));
+      for (const event of pEvents) {
+        ranges.push({ start: new Date(event.start), end: new Date(event.end) });
+        const slotKeys = generateSlotKeys(
+          new Date(event.start),
+          new Date(event.end)
+        );
+        for (const key of slotKeys) {
+          participantSlots.add(key);
         }
       }
 
-      const totalDays = participantDates.size;
+      const totalMinutes = participantSlots.size * SLOT_MINUTES;
       const percentage =
-        totalDaysWithCoverage > 0
-          ? (totalDays / totalDaysWithCoverage) * 100
+        totalSlotsWithCoverage > 0
+          ? (participantSlots.size / totalSlotsWithCoverage) * 100
           : 0;
 
-      participantMetrics.push({
-        name,
-        totalDays,
-        percentage,
-        ranges,
-      });
-    });
+      participantMetrics.push({ name, totalMinutes, percentage, ranges });
+    }
 
-    participantMetrics.sort((a, b) => b.totalDays - a.totalDays);
+    participantMetrics.sort((a, b) => b.totalMinutes - a.totalMinutes);
     const mostAvailable = participantMetrics[0] || null;
     const leastAvailable = participantMetrics.at(-1) || null;
 
-    // Find top meeting windows (by participant count)
+    // Build meeting windows: group consecutive slots with same participant set
     const meetingWindows: MeetingWindow[] = [];
-    const processedRanges = new Set<string>();
 
-    // Type for tracking current window
     interface WindowTracker {
-      dates: Date[];
+      keys: string[];
       participants: Set<string>;
     }
 
-    // Group consecutive dates by participant count
     let currentWindow: WindowTracker | null = null;
 
-    for (const dateStr of allDates) {
-      const date = new Date(dateStr);
-      const availableSet = dailyAvailability.get(dateStr);
-
+    for (const key of allSlotKeys) {
+      const availableSet = slotAvailability.get(key);
       if (!availableSet) {
         continue;
       }
 
-      if (
+      const isContinuation =
         currentWindow !== null &&
         currentWindow.participants.size === availableSet.size &&
-        Array.from(currentWindow.participants).every((p) => availableSet.has(p))
-      ) {
-        currentWindow.dates.push(date);
+        Array.from(currentWindow.participants).every((p) =>
+          availableSet.has(p)
+        ) &&
+        isConsecutiveSlot(currentWindow.keys.at(-1) ?? "", key);
+
+      if (isContinuation && currentWindow !== null) {
+        currentWindow.keys.push(key);
       } else {
-        if (currentWindow !== null && currentWindow.dates.length > 0) {
-          const lastDate = currentWindow.dates.at(-1);
-          if (lastDate) {
-            const rangeKey = `${format(currentWindow.dates[0], "yyyy-MM-dd")}-${format(lastDate, "yyyy-MM-dd")}`;
-            if (!processedRanges.has(rangeKey)) {
-              processedRanges.add(rangeKey);
-              const windowDates = currentWindow.dates;
-              const windowParticipants = currentWindow.participants;
-              meetingWindows.push({
-                range: {
-                  start: windowDates[0],
-                  end: new Date(lastDate.getTime() + 24 * 60 * 60 * 1000),
-                },
-                participants: Array.from(windowParticipants),
-                count: windowParticipants.size,
-                daysCount: windowDates.length,
-              });
-            }
-          }
+        if (currentWindow !== null && currentWindow.keys.length > 0) {
+          pushMeetingWindow(meetingWindows, currentWindow);
         }
-        currentWindow = {
-          dates: [date],
-          participants: new Set(availableSet),
-        };
+        currentWindow = { keys: [key], participants: new Set(availableSet) };
       }
     }
 
-    if (
-      currentWindow !== null &&
-      (currentWindow as WindowTracker).dates.length > 0
-    ) {
-      const windowDates = (currentWindow as WindowTracker).dates;
-      const windowParticipants = (currentWindow as WindowTracker).participants;
-      const lastWindowDate = windowDates.at(-1);
-      if (lastWindowDate) {
-        meetingWindows.push({
-          range: {
-            start: windowDates[0],
-            end: new Date(lastWindowDate.getTime() + 24 * 60 * 60 * 1000),
-          },
-          participants: Array.from(windowParticipants),
-          count: windowParticipants.size,
-          daysCount: windowDates.length,
-        });
-      }
+    if (currentWindow !== null && currentWindow.keys.length > 0) {
+      pushMeetingWindow(meetingWindows, currentWindow);
     }
 
     // Sort by participant count, then by duration
@@ -451,41 +397,38 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       if (b.count !== a.count) {
         return b.count - a.count;
       }
-      return b.daysCount - a.daysCount;
+      return b.durationMinutes - a.durationMinutes;
     });
 
     const topMeetingWindows = meetingWindows.slice(0, 5);
 
-    // Weekend vs weekday availability
-    let weekendDays = 0;
-    let weekdayDays = 0;
-    dailyAvailability.forEach((_, dateStr) => {
-      const day = new Date(dateStr).getDay();
+    // Weekend vs weekday slot counts
+    let weekendSlots = 0;
+    let weekdaySlots = 0;
+    for (const key of allSlotKeys) {
+      const day = parseSlotKey(key).getDay();
       if (day === 0 || day === 6) {
-        weekendDays++;
+        weekendSlots++;
       } else {
-        weekdayDays++;
+        weekdaySlots++;
       }
-    });
-
-    const weekendAvailability = weekendDays;
-    const weekdayAvailability = weekdayDays;
-
-    // Optimal meeting length (most common range duration)
-    const rangeDurations = new Map<number, number>();
-    for (const window of meetingWindows) {
-      const days = window.daysCount;
-      rangeDurations.set(days, (rangeDurations.get(days) || 0) + 1);
     }
 
-    let optimalMeetingLength = 1;
+    // Optimal meeting length (most common window duration)
+    const durationCounts = new Map<number, number>();
+    for (const window of meetingWindows) {
+      const mins = window.durationMinutes;
+      durationCounts.set(mins, (durationCounts.get(mins) || 0) + 1);
+    }
+
+    let optimalMeetingMinutes = SLOT_MINUTES;
     let maxFrequency = 0;
-    rangeDurations.forEach((freq, days) => {
+    for (const [mins, freq] of durationCounts) {
       if (freq > maxFrequency) {
         maxFrequency = freq;
-        optimalMeetingLength = days;
+        optimalMeetingMinutes = mins;
       }
-    });
+    }
 
     // Pairwise overlap analysis
     const pairwiseOverlaps: PairwiseOverlap[] = [];
@@ -495,62 +438,134 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       for (let j = i + 1; j < participantArray.length; j++) {
         const p1 = participantArray[i];
         const p2 = participantArray[j];
-        let overlapDays = 0;
+        let overlapSlots = 0;
 
-        for (const availableSet of dailyAvailability.values()) {
+        for (const availableSet of slotAvailability.values()) {
           if (availableSet.has(p1) && availableSet.has(p2)) {
-            overlapDays++;
+            overlapSlots++;
           }
         }
 
-        if (overlapDays > 0) {
+        if (overlapSlots > 0) {
+          const overlapMinutes = overlapSlots * SLOT_MINUTES;
           const percentage =
-            totalDaysWithCoverage > 0
-              ? (overlapDays / totalDaysWithCoverage) * 100
+            totalSlotsWithCoverage > 0
+              ? (overlapSlots / totalSlotsWithCoverage) * 100
               : 0;
 
-          pairwiseOverlaps.push({
-            pair: [p1, p2],
-            overlapDays,
-            percentage,
-          });
+          pairwiseOverlaps.push({ pair: [p1, p2], overlapMinutes, percentage });
         }
       }
     }
 
-    pairwiseOverlaps.sort((a, b) => b.overlapDays - a.overlapDays);
+    pairwiseOverlaps.sort((a, b) => b.overlapMinutes - a.overlapMinutes);
 
-    // Create heatmap data
+    // Heatmap data (date string to participant count - aggregate slots per day)
     const heatmapData = new Map<string, number>();
-    dailyAvailability.forEach((participantSet, dateStr) => {
-      heatmapData.set(dateStr, participantSet.size);
-    });
+    for (const [key, participantSet] of slotAvailability) {
+      const dateStr = key.split("T")[0];
+      const current = heatmapData.get(dateStr) || 0;
+      if (participantSet.size > current) {
+        heatmapData.set(dateStr, participantSet.size);
+      }
+    }
+
+    // Best day of week analysis
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const daySlotCounts = new Array<number>(7).fill(0);
+    const dayParticipantTotals = new Array<number>(7).fill(0);
+
+    for (const [key, participantSet] of slotAvailability) {
+      const dayIndex = parseSlotKey(key).getDay();
+      daySlotCounts[dayIndex]++;
+      dayParticipantTotals[dayIndex] += participantSet.size;
+    }
+
+    const dayOfWeekBreakdown: DayOfWeekMetric[] = dayNames
+      .map((day, index) => ({
+        day,
+        slots: daySlotCounts[index],
+        avgParticipants:
+          daySlotCounts[index] > 0
+            ? dayParticipantTotals[index] / daySlotCounts[index]
+            : 0,
+      }))
+      .filter((d) => d.slots > 0);
+
+    const bestDayOfWeek =
+      dayOfWeekBreakdown.length > 0
+        ? dayOfWeekBreakdown.reduce((best, current) =>
+            current.avgParticipants > best.avgParticipants ? current : best
+          )
+        : null;
+
+    // Peak hours analysis (only meaningful when time events exist)
+    const peakHours: PeakHourMetric[] = [];
+    if (hasTimeEvents) {
+      const hourSlotCounts = new Array<number>(24).fill(0);
+      const hourParticipantTotals = new Array<number>(24).fill(0);
+
+      for (const [key, participantSet] of slotAvailability) {
+        const hour = parseSlotKey(key).getHours();
+        hourSlotCounts[hour]++;
+        hourParticipantTotals[hour] += participantSet.size;
+      }
+
+      for (let h = 0; h < 24; h++) {
+        if (hourSlotCounts[h] > 0) {
+          let label: string;
+          if (timeFormat === "24h") {
+            label = `${String(h).padStart(2, "0")}:00`;
+          } else {
+            const period = h < 12 ? "AM" : "PM";
+            let displayHour = h % 12;
+            if (displayHour === 0) {
+              displayHour = 12;
+            }
+            label = `${displayHour}${period}`;
+          }
+          peakHours.push({
+            hour: h,
+            label,
+            avgParticipants: hourParticipantTotals[h] / hourSlotCounts[h],
+            totalSlots: hourSlotCounts[h],
+          });
+        }
+      }
+
+      // Sort by average participants descending
+      peakHours.sort((a, b) => b.avgParticipants - a.avgParticipants);
+    }
 
     return {
       totalParticipants,
       everyoneAvailable: commonRanges.length > 0,
+      hasTimeEvents,
       earliestDate,
       latestDate,
       earliestRange,
       latestRange,
       commonRanges,
       longest,
-      longestDurationDays,
-      totalDaysWithCoverage,
-      totalCalendarDays,
+      longestDurationMinutes,
+      totalSlotsWithCoverage,
+      totalCalendarSlots,
       coveragePercentage,
-      averageParticipantsPerDay,
+      averageParticipantsPerSlot,
       participantMetrics,
       mostAvailable,
       leastAvailable,
       topMeetingWindows,
-      weekendAvailability,
-      weekdayAvailability,
-      optimalMeetingLength,
+      weekendSlots,
+      weekdaySlots,
+      optimalMeetingMinutes,
       pairwiseOverlaps,
       heatmapData,
+      bestDayOfWeek,
+      dayOfWeekBreakdown,
+      peakHours,
     };
-  }, [events]);
+  }, [events, timeFormat]);
 
   if (!metrics) {
     return (
@@ -624,20 +639,49 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
     );
   }
 
+  /** Formats a date range, showing times when events have specific times. */
   const formatDateRange = (range: DateRange) => {
-    const adjustedEnd = new Date(range.end.getTime() - 24 * 60 * 60 * 1000);
-    if (
-      format(range.start, "yyyy-MM-dd") === format(adjustedEnd, "yyyy-MM-dd")
-    ) {
-      return format(range.start, "MMM d, yyyy");
+    const durationMs = range.end.getTime() - range.start.getTime();
+    const durationMinutes = Math.round(durationMs / (1000 * 60));
+
+    // Check if this range aligns to full days (start at midnight, end at midnight)
+    const startsAtMidnight =
+      range.start.getHours() === 0 && range.start.getMinutes() === 0;
+    const endsAtMidnight =
+      range.end.getHours() === 0 && range.end.getMinutes() === 0;
+    const isFullDays =
+      startsAtMidnight && endsAtMidnight && durationMinutes >= 24 * 60;
+
+    if (isFullDays) {
+      const adjustedEnd = new Date(range.end.getTime() - 24 * 60 * 60 * 1000);
+      if (
+        format(range.start, "yyyy-MM-dd") === format(adjustedEnd, "yyyy-MM-dd")
+      ) {
+        return format(range.start, "MMM d, yyyy");
+      }
+      return `${format(range.start, "MMM d")} - ${format(adjustedEnd, "MMM d, yyyy")}`;
     }
-    return `${format(range.start, "MMM d")} - ${format(adjustedEnd, "MMM d, yyyy")}`;
+
+    // Show times for sub-day ranges
+    if (format(range.start, "yyyy-MM-dd") === format(range.end, "yyyy-MM-dd")) {
+      return `${format(range.start, `MMM d, ${timeFmt}`)} - ${format(range.end, timeFmt)}`;
+    }
+    return `${format(range.start, `MMM d, ${timeFmt}`)} - ${format(range.end, `MMM d, ${timeFmt}, yyyy`)}`;
   };
 
   const participantColorMap = new Map<string, string>();
   for (const event of events) {
     participantColorMap.set(event.title, event.color);
   }
+
+  /** Context-aware label for coverage stats. */
+  const coverageUnitLabel = metrics.hasTimeEvents ? "slots" : "days";
+  const totalCoverageCount = metrics.hasTimeEvents
+    ? metrics.totalSlotsWithCoverage
+    : Math.ceil((metrics.totalSlotsWithCoverage * SLOT_MINUTES) / (24 * 60));
+  const totalCalendarCount = metrics.hasTimeEvents
+    ? metrics.totalCalendarSlots
+    : Math.ceil((metrics.totalCalendarSlots * SLOT_MINUTES) / (24 * 60));
 
   return (
     <div className="space-y-4 overflow-y-auto">
@@ -661,8 +705,8 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
             <div className="flex items-center gap-2 text-sm">
               <PulseIcon className="size-5 text-muted-foreground" />
               <span>
-                <strong>{metrics.averageParticipantsPerDay.toFixed(1)}</strong>{" "}
-                avg/day
+                <strong>{metrics.averageParticipantsPerSlot.toFixed(1)}</strong>{" "}
+                avg/{metrics.hasTimeEvents ? "slot" : "day"}
               </span>
             </div>
           </div>
@@ -700,7 +744,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                     Earliest Best Date
                   </p>
                   <p className="font-medium">
-                    {format(metrics.earliestDate, "MMM d, yyyy")}
+                    {metrics.hasTimeEvents
+                      ? format(metrics.earliestDate, `MMM d, yyyy ${timeFmt}`)
+                      : format(metrics.earliestDate, "MMM d, yyyy")}
                   </p>
                 </div>
               )}
@@ -710,7 +756,9 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                     Latest Best Date
                   </p>
                   <p className="font-medium">
-                    {format(metrics.latestDate, "MMM d, yyyy")}
+                    {metrics.hasTimeEvents
+                      ? format(metrics.latestDate, `MMM d, yyyy ${timeFmt}`)
+                      : format(metrics.latestDate, "MMM d, yyyy")}
                   </p>
                 </div>
               )}
@@ -747,8 +795,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 </h3>
                 <div className="space-y-1 rounded-lg border p-3">
                   <p className="font-medium text-sm">
-                    {metrics.longestDurationDays} consecutive day
-                    {metrics.longestDurationDays !== 1 ? "s" : ""}
+                    {formatDuration(metrics.longestDurationMinutes)}
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {formatDateRange(metrics.longest)}
@@ -771,7 +818,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
           {metrics.topMeetingWindows.slice(0, 5).map((window) => (
             <div
               className="space-y-2 rounded-lg border p-3"
-              key={`${window.range}-${window.count}`}
+              key={`${window.range.start.getTime()}-${window.count}`}
             >
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -779,8 +826,8 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                     {window.count}/{metrics.totalParticipants} participants
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {formatDateRange(window.range)} ({window.daysCount} day
-                    {window.daysCount !== 1 ? "s" : ""})
+                    {formatDateRange(window.range)} (
+                    {formatDuration(window.durationMinutes)})
                   </p>
                 </div>
                 {window.count === metrics.totalParticipants && (
@@ -834,7 +881,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="text-xs" variant="secondary">
-                    {participant.totalDays} days
+                    {formatDuration(participant.totalMinutes)}
                   </Badge>
                   {participant === metrics.mostAvailable && (
                     <Badge className="text-xs" variant="default">
@@ -883,8 +930,8 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
               value={metrics.coveragePercentage}
             />
             <p className="text-muted-foreground text-xs">
-              {metrics.totalDaysWithCoverage} of {metrics.totalCalendarDays}{" "}
-              days have at least one person available
+              {totalCoverageCount} of {totalCalendarCount} {coverageUnitLabel}{" "}
+              have at least one person available
             </p>
           </div>
 
@@ -894,29 +941,129 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
                 <CalendarDotsIcon className="size-3" />
                 Weekdays
               </p>
-              <p className="font-medium">{metrics.weekdayAvailability} days</p>
+              <p className="font-medium">
+                {formatDuration(metrics.weekdaySlots * SLOT_MINUTES)}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="flex items-center gap-1 text-muted-foreground text-xs">
                 <CalendarDotsIcon className="size-3" />
                 Weekends
               </p>
-              <p className="font-medium">{metrics.weekendAvailability} days</p>
+              <p className="font-medium">
+                {formatDuration(metrics.weekendSlots * SLOT_MINUTES)}
+              </p>
             </div>
           </div>
 
-          {metrics.optimalMeetingLength > 1 && (
+          {metrics.optimalMeetingMinutes > SLOT_MINUTES && (
             <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950/30">
               <p className="text-sm">
                 <span className="font-medium">Optimal meeting length:</span>{" "}
                 <span className="text-blue-700 dark:text-blue-300">
-                  {metrics.optimalMeetingLength} days
+                  {formatDuration(metrics.optimalMeetingMinutes)}
                 </span>
               </p>
             </div>
           )}
         </CardContent>
       </Card>
+      {/* Day of Week & Peak Hours */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+            <SunIcon className="size-5 lg:size-6" />
+            Day &amp; Time Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Best Day of Week */}
+          {metrics.bestDayOfWeek && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">Best Day of Week</h3>
+              <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-950/30">
+                <p className="text-sm">
+                  <span className="font-medium text-purple-700 dark:text-purple-300">
+                    {metrics.bestDayOfWeek.day}
+                  </span>{" "}
+                  has the highest overlap (
+                  {metrics.bestDayOfWeek.avgParticipants.toFixed(1)} avg
+                  participants)
+                </p>
+              </div>
+              <div className="space-y-2">
+                {metrics.dayOfWeekBreakdown.map((dayMetric) => (
+                  <div
+                    className="flex items-center justify-between text-sm"
+                    key={dayMetric.day}
+                  >
+                    <span className="w-8 text-muted-foreground">
+                      {dayMetric.day}
+                    </span>
+                    <div className="mx-2 flex-1">
+                      <Progress
+                        aria-label={`${dayMetric.day}: ${dayMetric.avgParticipants.toFixed(1)} avg participants`}
+                        className="h-1.5"
+                        value={
+                          (dayMetric.avgParticipants /
+                            metrics.totalParticipants) *
+                          100
+                        }
+                      />
+                    </div>
+                    <span className="w-20 text-right text-muted-foreground text-xs">
+                      {formatDuration(dayMetric.slots * SLOT_MINUTES)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Peak Hours */}
+          {metrics.peakHours.length > 0 && (
+            <>
+              {metrics.bestDayOfWeek && <Separator />}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Peak Hours</h3>
+                <div className="space-y-2">
+                  {metrics.peakHours.slice(0, 5).map((hourMetric) => (
+                    <div
+                      className="flex items-center justify-between text-sm"
+                      key={hourMetric.hour}
+                    >
+                      <span className="w-10 text-muted-foreground text-xs">
+                        {hourMetric.label}
+                      </span>
+                      <div className="mx-2 flex-1">
+                        <Progress
+                          aria-label={`${hourMetric.label}: ${hourMetric.avgParticipants.toFixed(1)} avg participants`}
+                          className="h-1.5"
+                          value={
+                            (hourMetric.avgParticipants /
+                              metrics.totalParticipants) *
+                            100
+                          }
+                        />
+                      </div>
+                      <span className="text-muted-foreground text-xs">
+                        {hourMetric.avgParticipants.toFixed(1)} avg
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {!metrics.bestDayOfWeek && metrics.peakHours.length === 0 && (
+            <p className="text-muted-foreground text-sm">
+              Add events to see day and time insights.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Overlap Analysis */}
       <Card>
         <CardHeader>
@@ -957,7 +1104,7 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="text-xs" variant="secondary">
-                  {overlap.overlapDays} days
+                  {formatDuration(overlap.overlapMinutes)}
                 </Badge>
                 <span className="text-muted-foreground text-xs">
                   {overlap.percentage.toFixed(0)}%
@@ -969,4 +1116,59 @@ export function AvailabilityMetrics({ events }: AvailabilityMetricsProps) {
       </Card>
     </div>
   );
+}
+
+/** Checks if two slot keys are consecutive (15 minutes apart). */
+function isConsecutiveSlot(prevKey: string, nextKey: string): boolean {
+  const prev = parseSlotKey(prevKey);
+  const next = parseSlotKey(nextKey);
+  return next.getTime() - prev.getTime() === SLOT_MINUTES * 60 * 1000;
+}
+
+/** Groups consecutive slot keys into DateRange objects. */
+function groupConsecutiveSlots(sortedKeys: string[]): DateRange[] {
+  if (sortedKeys.length === 0) {
+    return [];
+  }
+
+  const ranges: DateRange[] = [];
+  let rangeStart = sortedKeys[0];
+  let prevKey = sortedKeys[0];
+
+  for (let i = 1; i < sortedKeys.length; i++) {
+    const currentKey = sortedKeys[i];
+    if (isConsecutiveSlot(prevKey, currentKey)) {
+      prevKey = currentKey;
+    } else {
+      const endDate = parseSlotKey(prevKey);
+      endDate.setMinutes(endDate.getMinutes() + SLOT_MINUTES);
+      ranges.push({ start: parseSlotKey(rangeStart), end: endDate });
+      rangeStart = currentKey;
+      prevKey = currentKey;
+    }
+  }
+
+  const endDate = parseSlotKey(prevKey);
+  endDate.setMinutes(endDate.getMinutes() + SLOT_MINUTES);
+  ranges.push({ start: parseSlotKey(rangeStart), end: endDate });
+
+  return ranges;
+}
+
+/** Creates a MeetingWindow from a WindowTracker and pushes it to the array. */
+function pushMeetingWindow(
+  windows: MeetingWindow[],
+  tracker: { keys: string[]; participants: Set<string> }
+): void {
+  const startDate = parseSlotKey(tracker.keys[0]);
+  const lastKey = tracker.keys.at(-1) ?? tracker.keys[0];
+  const endDate = parseSlotKey(lastKey);
+  endDate.setMinutes(endDate.getMinutes() + SLOT_MINUTES);
+
+  windows.push({
+    range: { start: startDate, end: endDate },
+    participants: Array.from(tracker.participants),
+    count: tracker.participants.size,
+    durationMinutes: tracker.keys.length * SLOT_MINUTES,
+  });
 }
