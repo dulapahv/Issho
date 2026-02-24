@@ -137,7 +137,11 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
 
         try {
           await onDeleteEvent(event.id);
-          toast.success("Availability removed", { id: toastId });
+          const timeFmt = timeFormat === "24h" ? "HH:mm" : "h:mm a";
+          toast.success(`Removed ${event.title}'s availability`, {
+            id: toastId,
+            description: `${format(event.start, "MMM d, yyyy")} · ${format(event.start, timeFmt)} – ${format(event.end, timeFmt)}`,
+          });
         } catch (error) {
           const errorMessage = parseError(error);
           console.error("Failed to remove availability:", errorMessage);
