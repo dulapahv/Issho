@@ -38,8 +38,8 @@ interface MarkAvailabilityDialogProps {
 }
 
 interface FormBodyProps {
-  formRef: React.RefObject<HTMLFormElement>;
-  inputRef: React.RefObject<HTMLInputElement>;
+  formRef: React.RefObject<HTMLFormElement | null>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onClearServerErrors: () => void;
   isTimeSlot: boolean;
