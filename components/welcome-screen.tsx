@@ -299,8 +299,9 @@ export function WelcomeScreen() {
           <Image
             alt="Calendar collaboration illustration"
             className="object-cover object-left"
+            fetchPriority="high"
             fill
-            priority
+            loading="eager"
             quality={100}
             sizes="(max-width: 1023px) 0vw, (max-width: 1279px) 150vw, (max-width: 1535px) 120vw, 100vw"
             src="/welcome.png"
