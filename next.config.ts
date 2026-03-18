@@ -8,12 +8,14 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [100],
   },
+  logging: {
+    browserToTerminal: true,
+  },
   experimental: {
     typedEnv: true,
     viewTransition: true,
     inlineCss: true,
     turbopackFileSystemCacheForBuild: true,
-    browserDebugInfoInTerminal: true,
     optimizePackageImports: ["@phosphor-icons/react"],
   },
   async redirects() {
