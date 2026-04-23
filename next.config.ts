@@ -15,7 +15,9 @@ const nextConfig: NextConfig = {
     typedEnv: true,
     viewTransition: true,
     inlineCss: true,
+    cssChunking: "strict",
     turbopackFileSystemCacheForBuild: true,
+    turbopackServerSideNestedAsyncChunking: true,
     optimizePackageImports: ["@phosphor-icons/react"],
   },
   async redirects() {
