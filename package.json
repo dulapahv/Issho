@@ -29,7 +29,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reactour/tour": "^3.8.0",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.104.0",
+    "@supabase/supabase-js": "^2.105.1",
     "@vercel/analytics": "^1.6.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "bcryptjs": "^3.0.3",
@@ -73,5 +73,5 @@
       "prisma"
     ]
   },
-  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
 }
