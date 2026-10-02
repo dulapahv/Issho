@@ -13,11 +13,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     typedEnv: true,
-    viewTransition: true,
     inlineCss: true,
-    cssChunking: "strict",
-    turbopackFileSystemCacheForBuild: true,
     turbopackServerSideNestedAsyncChunking: true,
+    turbopackRustReactCompiler: true,
+    turbopackCjsTreeShaking: true,
     optimizePackageImports: ["@phosphor-icons/react"],
   },
   async redirects() {

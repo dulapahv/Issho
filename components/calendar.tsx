@@ -130,7 +130,7 @@ export function Calendar({ onCreateEvent, onDeleteEvent }: CalendarProps) {
 
   const handleSelectEvent = useCallback(
     async (event: CalendarEvent) => {
-      if (!isDrawMode && !deletingEventIds.current.has(event.id)) {
+      if (!(isDrawMode || deletingEventIds.current.has(event.id))) {
         // Delete mode - delete specific event when clicked
         deletingEventIds.current.add(event.id);
         const toastId = toast.loading("Removing availability...");
